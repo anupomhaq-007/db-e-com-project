@@ -1,8 +1,5 @@
 providers = ["python"]
 
-[phases.setup]
-nixPkgs = ["...", "postgresql"]
-
 [phases.build]
 cmds = [
   "python manage.py collectstatic --noinput"
