@@ -1,0 +1,79 @@
+<div id="heroCarousel" class="carousel slide hero-carousel mb-4 shadow-sm rounded-4 overflow-hidden" data-bs-ride="carousel" data-bs-interval="5000">
+    <div class="carousel-indicators">
+        {% for slide in slides %}
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+        {% endfor %}
+    </div>
+    
+    <div class="carousel-inner">
+        {% for slide in slides %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %} bg-dark text-white position-relative" style="background: {{ slide.background_gradient|default:'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}; min-height: 320px;">
+            <div class="container h-100 d-flex flex-column justify-content-center p-4 p-md-5">
+                <div class="row align-items-center g-4">
+                    <div class="{% if slide.get_image_url %}col-lg-7 col-md-7{% else %}col-12{% endif %} d-flex flex-column justify-content-center">
+                        {% if slide.badge_text %}
+                        <span class="badge bg-{{ slide.badge_color|default:'primary' }} text-uppercase px-3 py-2 rounded-pill w-auto align-self-start mb-2 shadow-sm">
+                            {{ slide.badge_text }}
+                        </span>
+                        {% endif %}
+                        
+                        <h1 class="display-5 fw-bold text-white mb-2">{{ slide.title }}</h1>
+                        
+                        {% if slide.subtitle %}
+                        <p class="lead text-light mb-4 opacity-90 col-xl-10">
+                            {{ slide.subtitle }}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if slide.button_text %}
+                            <a href="{{ slide.button_url }}" class="btn btn-primary btn-lg px-4 rounded-3 shadow-sm fw-bold">
+                                {{ slide.button_text }}
+                            </a>
+                            {% endif %}
+                            {% if slide.secondary_button_text %}
+                            <a href="{{ slide.secondary_button_url }}" class="btn btn-outline-light btn-lg px-4 rounded-3">
+                                {{ slide.secondary_button_text }}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if slide.get_image_url %}
+                    <div class="col-lg-5 col-md-5 text-center text-md-end">
+                        <div class="position-relative d-inline-block">
+                            <img src="{{ slide.get_image_url }}" alt="{{ slide.title }}" 
+                                 class="img-fluid rounded-4 shadow-lg border border-white border-opacity-25 bg-white bg-opacity-10 p-2" 
+                                 style="max-height: 270px; width: auto; object-fit: cover;">
+                            {% if slide.product %}
+                            <div class="position-absolute bottom-0 end-0 bg-dark bg-opacity-85 text-white p-2 px-3 rounded-3 m-2 shadow border border-secondary" style="backdrop-filter: blur(4px);">
+                                <small class="d-block text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Item #{{ slide.product.product_id }}</small>
+                                <span class="fw-bold text-warning fs-6">${{ slide.product.price }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="carousel-item active bg-dark text-white p-5 text-center">
+            <h3>No Header Slides Configured</h3>
+            <p>Please add slider slides in the Admin Management Dashboard.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Controls -->
+    {% if slides|length > 1 %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+    {% endif %}
+</div>

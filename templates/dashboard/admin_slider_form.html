@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if slide %}Edit Header Slide #{{ slide.slide_id }}{% else %}Add New Header Slide{% endif %} | Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2 small">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_slider_list' %}">Slider Manager</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% if slide %}Edit Slide{% else %}New Slide{% endif %}</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+                <div class="card-header bg-primary text-white p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold mb-1">
+                            <i class="bi bi-card-image me-2"></i>{% if slide %}Edit Header Slide: "{{ slide.title }}"{% else %}Create New Header Slide{% endif %}
+                        </h4>
+                        <p class="text-white-50 small mb-0">Configure title, uploaded images, buttons, and background gradients for hero carousel.</p>
+                    </div>
+                    <a href="{% url 'admin_slider_list' %}" class="btn btn-outline-light btn-sm fw-semibold">
+                        <i class="bi bi-x-lg me-1"></i> Cancel
+                    </a>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data" action="{% if slide %}{% url 'admin_slider_update' slide.slide_id %}{% else %}{% url 'admin_slider_create' %}{% endif %}">
+                        {% csrf_token %}
+
+                        <!-- Basic Content Section -->
+                        <h5 class="fw-bold text-primary border-bottom pb-2 mb-3">1. Main Text Content</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Slide Title <span class="text-danger">*</span></label>
+                                <input type="text" name="title" value="{{ slide.title|default:'' }}" class="form-control form-control-lg" placeholder="e.g. Next-Gen Gaming Laptops Sale" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Display Order</label>
+                                <input type="number" name="display_order" value="{{ slide.display_order|default:1 }}" class="form-control form-control-lg" min="0" placeholder="1">
+                                <small class="text-muted">Lower numbers appear first</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Subtitle / Description</label>
+                                <textarea name="subtitle" rows="3" class="form-control" placeholder="Brief lead text description highlighting key features or promotion details...">{{ slide.subtitle|default:'' }}</textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Badge Text</label>
+                                <input type="text" name="badge_text" value="{{ slide.badge_text|default:'CSE 303 Lab Project' }}" class="form-control" placeholder="e.g. CSE 303 Lab Project, Special Offer, Featured">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Badge Color Theme</label>
+                                <select name="badge_color" class="form-select">
+                                    <option value="primary" {% if slide.badge_color == 'primary' %}selected{% endif %}>Primary (Blue)</option>
+                                    <option value="warning" {% if slide.badge_color == 'warning' %}selected{% endif %}>Warning (Gold/Yellow)</option>
+                                    <option value="info" {% if slide.badge_color == 'info' %}selected{% endif %}>Info (Cyan/Teal)</option>
+                                    <option value="success" {% if slide.badge_color == 'success' %}selected{% endif %}>Success (Green)</option>
+                                    <option value="danger" {% if slide.badge_color == 'danger' %}selected{% endif %}>Danger (Red)</option>
+                                    <option value="dark" {% if slide.badge_color == 'dark' %}selected{% endif %}>Dark (Black)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Product Photo & Image Upload Section -->
+                        <h5 class="fw-bold text-primary border-bottom pb-2 mb-3 mt-4">2. Product Photo & Slide Image</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Option A: Link Existing Catalog Product</label>
+                                <select name="product_id" class="form-select">
+                                    <option value="">-- No Linked Product (Custom Image Only) --</option>
+                                    {% for p in products %}
+                                    <option value="{{ p.product_id }}" {% if slide.product_id == p.product_id %}selected{% endif %}>
+                                        [{{ p.product_id }}] {{ p.name }} - ${{ p.price }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">If selected, product image and price badge will auto-link if no custom photo is uploaded.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Option B: Upload Custom Image File</label>
+                                <input type="file" name="slide_image" accept="image/*" class="form-control">
+                                <small class="text-muted">Uploaded photos are automatically optimized & saved to CDN/local storage.</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Option C: Direct Image URL / CDN Link</label>
+                                <input type="url" name="image_url" value="{{ slide.image_url|default:'' }}" class="form-control" placeholder="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600">
+                                <small class="text-muted">Optional web image URL or Unsplash image link.</small>
+                            </div>
+
+                            {% if slide.get_image_url %}
+                            <div class="col-12 mt-2">
+                                <label class="form-label fw-bold d-block">Current Active Slide Image:</label>
+                                <img src="{{ slide.get_image_url }}" alt="Slide Image" class="rounded-3 border p-2 bg-light shadow-sm" style="max-height: 140px;">
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Buttons & Links Section -->
+                        <h5 class="fw-bold text-primary border-bottom pb-2 mb-3 mt-4">3. Action Buttons & Links</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Primary Button Label</label>
+                                <input type="text" name="button_text" value="{{ slide.button_text|default:'Explore Products' }}" class="form-control" placeholder="e.g. Explore Products">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Primary Button URL</label>
+                                <input type="text" name="button_url" value="{{ slide.button_url|default:'#catalog-section' }}" class="form-control" placeholder="e.g. #catalog-section or /queries/">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Secondary Button Label (Optional)</label>
+                                <input type="text" name="secondary_button_text" value="{{ slide.secondary_button_text|default:'' }}" class="form-control" placeholder="e.g. Lab Report">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Secondary Button URL (Optional)</label>
+                                <input type="text" name="secondary_button_url" value="{{ slide.secondary_button_url|default:'' }}" class="form-control" placeholder="e.g. #report-section">
+                            </div>
+                        </div>
+
+                        <!-- Theme & Status Section -->
+                        <h5 class="fw-bold text-primary border-bottom pb-2 mb-3 mt-4">4. Background Theme & Activation</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Background Gradient Style</label>
+                                <select name="background_gradient" class="form-select font-monospace small">
+                                    <option value="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" {% if slide.background_gradient == 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' or not slide %}selected{% endif %}>Slate Dark (Default Navy)</option>
+                                    <option value="linear-gradient(135deg, #065f46 0%, #047857 100%)" {% if slide.background_gradient == 'linear-gradient(135deg, #065f46 0%, #047857 100%)' %}selected{% endif %}>Emerald Green (Inventory)</option>
+                                    <option value="linear-gradient(135deg, #431407 0%, #7c2d12 100%)" {% if slide.background_gradient == 'linear-gradient(135deg, #431407 0%, #7c2d12 100%)' %}selected{% endif %}>Warm Amber/Bronze (Triggers)</option>
+                                    <option value="linear-gradient(135deg, #312e81 0%, #4338ca 100%)" {% if slide.background_gradient == 'linear-gradient(135deg, #312e81 0%, #4338ca 100%)' %}selected{% endif %}>Royal Indigo Blue</option>
+                                    <option value="linear-gradient(135deg, #831843 0%, #be185d 100%)" {% if slide.background_gradient == 'linear-gradient(135deg, #831843 0%, #be185d 100%)' %}selected{% endif %}>Crimson Magenta</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 d-flex align-items-center pt-3">
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" name="is_active" id="isActiveCheck" {% if slide %}{% if slide.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+                                    <label class="form-check-label fw-bold fs-6 ms-2" for="isActiveCheck">
+                                        Active & Visible on Home Page
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Submit Bar -->
+                        <div class="d-flex justify-content-between align-items-center border-top pt-4 mt-4">
+                            <a href="{% url 'admin_slider_list' %}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Slide Manager
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow">
+                                <i class="bi bi-check-circle-fill me-2"></i>{% if slide %}Save Changes{% else %}Publish Header Slide{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

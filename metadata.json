@@ -1,0 +1,6 @@
+{
+  "name": "E-Commerce Database System",
+  "description": "CSE 303 Lab E-Commerce Management Database System using Django, SQL Queries, Triggers, RAID 4 analysis, and B+ Tree indexing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

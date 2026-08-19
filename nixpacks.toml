@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["python311", "postgresql"]
+
+[phases.install]
+cmds = ["pip install --no-cache-dir -r requirements.txt"]
+
+[phases.build]
+cmds = [
+  "python3 manage.py collectstatic --noinput",
+  "python3 manage.py migrate --noinput"
+]
+
+[start]
+cmd = "python3 server.py"

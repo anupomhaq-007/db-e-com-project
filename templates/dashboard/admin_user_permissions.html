@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}User & Role Permissions Control | Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-3 px-lg-4">
+    <!-- Header Navigation -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between pb-3 mb-4 border-bottom">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white px-2 py-1 uppercase font-monospace">Admin & Security</span>
+                <h2 class="fw-bold text-dark mb-0">Admin Login & Permissions Control Center</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Manage user access rights, staff status, superuser controls, and Django admin panel permissions.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-sm fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Admin Dashboard
+            </a>
+            <a href="/admin/auth/user/" target="_blank" class="btn btn-dark btn-sm fw-bold">
+                <i class="bi bi-shield-lock me-1"></i> Django Auth Users
+            </a>
+            <a href="/admin/auth/group/" target="_blank" class="btn btn-outline-dark btn-sm fw-bold">
+                <i class="bi bi-people me-1"></i> Django Groups & Roles
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mb-4 shadow-sm" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Security & Role Overview Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary text-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-white-50 text-uppercase fw-semibold small">Total Auth Users</span>
+                        <h3 class="fw-bold mb-0 mt-1">{{ total_users_count }}</h3>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-people-fill fs-3"></i>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2 border-top border-white border-opacity-25 text-white-50 small">
+                    Registered in Django Auth system
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-danger text-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-white-50 text-uppercase fw-semibold small">Staff & Admin Users</span>
+                        <h3 class="fw-bold mb-0 mt-1">{{ staff_count }}</h3>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-shield-check fs-3"></i>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2 border-top border-white border-opacity-25 text-white-50 small">
+                    Can log into Django Admin & Admin Dashboard
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-dark text-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary text-uppercase fw-semibold small">Superusers</span>
+                        <h3 class="fw-bold mb-0 mt-1">{{ superuser_count }}</h3>
+                    </div>
+                    <div class="bg-secondary bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center text-warning" style="width: 50px; height: 50px;">
+                        <i class="bi bi-key-fill fs-3"></i>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2 border-top border-secondary border-opacity-50 text-secondary small">
+                    Full unrestricted root administrative privileges
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-info h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted text-uppercase fw-semibold small">Customer Users</span>
+                        <h3 class="fw-bold text-dark mb-0 mt-1">{{ customer_count }}</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-person-badge fs-3"></i>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2 border-top text-muted small">
+                    Standard portal users with shopping privileges
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Permission Grant / Promote Tool -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-person-gear text-primary me-2"></i> Quick Admin Permission Assignment</h5>
+        <form method="POST" action="{% url 'admin_user_permissions_update' %}" class="row g-3 align-items-end">
+            {% csrf_token %}
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold text-muted">Select Target User:</label>
+                <select name="user_id" class="form-select" required>
+                    <option value="">-- Choose User Account --</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}">
+                        {{ u.username }} ({{ u.email|default:'No Email' }}) - [{% if u.is_superuser %}Superuser{% elif u.is_staff %}Staff Admin{% else %}Customer{% endif %}]
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-12 col-md-3">
+                <label class="form-label small fw-semibold text-muted">Assign Permission Level:</label>
+                <select name="role_action" class="form-select" required>
+                    <option value="make_staff">Staff Admin (Django Admin & Staff Dashboard)</option>
+                    <option value="make_superuser">Full Superuser (Root Administrative Privileges)</option>
+                    <option value="make_customer">Customer Only (Revoke Admin Privileges)</option>
+                    <option value="toggle_active">Toggle Account Active / Inactive</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label class="form-label small fw-semibold text-muted">Quick Preset Group:</label>
+                <select name="group_preset" class="form-select">
+                    <option value="">-- No Group Change --</option>
+                    <option value="Store Managers">Store Managers (Products, Inventory, Orders)</option>
+                    <option value="Inventory Clerks">Inventory Clerks (Products & Warehouse Stock)</option>
+                    <option value="Customer Support">Customer Support (Orders, Customers, Logs)</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">
+                    <i class="bi bi-check2-circle me-1"></i> Apply Controls
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- User Permission & Control Management Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 border-0 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
+            <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-shield-lock me-2 text-danger"></i> User Login & Permission Registry</h5>
+                <small class="text-muted">Directly manage Django Admin (<code>/admin/</code>) access status for every account</small>
+            </div>
+            <a href="/admin/" target="_blank" class="btn btn-sm btn-outline-dark fw-bold">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Open Django Admin Console
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">User Account</th>
+                        <th>Email & Profile</th>
+                        <th>Status</th>
+                        <th>Staff Status (Admin Login)</th>
+                        <th>Superuser (Root)</th>
+                        <th>Groups / Roles</th>
+                        <th>Last Login</th>
+                        <th class="text-end pe-4">Permission Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar rounded-circle d-flex align-items-center justify-content-center text-white fw-bold {% if u.is_superuser %}bg-dark{% elif u.is_staff %}bg-danger{% else %}bg-primary{% endif %}" style="width: 38px; height: 38px; font-size: 0.85rem;">
+                                    {{ u.username|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <span class="fw-bold text-dark">{{ u.username }}</span>
+                                    {% if u.id == request.user.id %}
+                                    <span class="badge bg-secondary ms-1">Current User</span>
+                                    {% endif %}
+                                    <div class="small text-muted font-monospace">ID: #{{ u.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ u.email|default:"<span class='text-muted'>—</span>" }}</div>
+                            <small class="text-muted">{{ u.first_name }} {{ u.last_name }}</small>
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">
+                                <i class="bi bi-check-circle me-1"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">
+                                <i class="bi bi-x-circle me-1"></i> Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_staff %}
+                            <span class="badge bg-danger text-white rounded-pill px-3 py-1">
+                                <i class="bi bi-check-lg me-1"></i> Staff Allowed
+                            </span>
+                            {% else %}
+                            <span class="badge bg-light text-muted border rounded-pill px-3 py-1">
+                                <i class="bi bi-dash-lg me-1"></i> No Staff Access
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_superuser %}
+                            <span class="badge bg-dark text-warning rounded-pill px-3 py-1 border border-warning">
+                                <i class="bi bi-stars me-1"></i> Superuser
+                            </span>
+                            {% else %}
+                            <span class="badge bg-light text-muted border rounded-pill px-3 py-1">
+                                Regular
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.groups.all %}
+                                {% for g in u.groups.all %}
+                                <span class="badge bg-secondary me-1">{{ g.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted small">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if u.last_login %}
+                                {{ u.last_login|date:"M d, Y H:i" }}
+                                {% else %}
+                                Never
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-gear-fill me-1"></i> Permissions
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li>
+                                        <form method="POST" action="{% url 'admin_user_permissions_update' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_id" value="{{ u.id }}">
+                                            <input type="hidden" name="role_action" value="{% if u.is_staff %}make_customer{% else %}make_staff{% endif %}">
+                                            <button type="submit" class="dropdown-item">
+                                                {% if u.is_staff %}
+                                                <i class="bi bi-person-x text-warning me-2"></i> Revoke Staff / Admin Login
+                                                {% else %}
+                                                <i class="bi bi-shield-check text-success me-2"></i> Grant Staff / Admin Login
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{% url 'admin_user_permissions_update' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_id" value="{{ u.id }}">
+                                            <input type="hidden" name="role_action" value="{% if u.is_superuser %}make_staff{% else %}make_superuser{% endif %}">
+                                            <button type="submit" class="dropdown-item">
+                                                {% if u.is_superuser %}
+                                                <i class="bi bi-arrow-down-circle text-muted me-2"></i> Demote from Superuser
+                                                {% else %}
+                                                <i class="bi bi-stars text-danger me-2"></i> Grant Full Superuser
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="POST" action="{% url 'admin_user_permissions_update' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_id" value="{{ u.id }}">
+                                            <input type="hidden" name="role_action" value="toggle_active">
+                                            <button type="submit" class="dropdown-item">
+                                                {% if u.is_active %}
+                                                <i class="bi bi-ban text-danger me-2"></i> Deactivate Account
+                                                {% else %}
+                                                <i class="bi bi-check-circle text-success me-2"></i> Reactivate Account
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/admin/auth/user/{{ u.id }}/change/" target="_blank">
+                                            <i class="bi bi-sliders text-primary me-2"></i> Advanced Django Permissions
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Django Admin Permission Matrix & Capabilities -->
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-diagram-3-fill text-primary me-2"></i> Django Model Permission Matrix</h5>
+                <p class="text-muted small">Models registered in Django Admin (<code>/admin/</code>) with full CRUD controls:</p>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div><strong>Products & Inventory</strong> (Product, Category, Supplier)</div>
+                        <span class="badge bg-success">Add, View, Change, Delete</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div><strong>Warehousing</strong> (Warehouse, WarehouseStock)</div>
+                        <span class="badge bg-success">Add, View, Change, Delete</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div><strong>Orders & Transactions</strong> (Order, OrderDetail, Payment)</div>
+                        <span class="badge bg-success">Add, View, Change, Inline Edit</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div><strong>Security & Audit Logs</strong> (OrderLog)</div>
+                        <span class="badge bg-dark">View-Only / Read-Only Audit</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div><strong>Promotions & Sliders</strong> (HeaderSlide)</div>
+                        <span class="badge bg-primary">Full Control & Ordering</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-key text-warning me-2"></i> Django Admin Access Control Rules</h5>
+                <ul class="text-muted small mb-0 lh-lg">
+                    <li><strong class="text-dark">Admin Login Access Requirement:</strong> A user must have <code>is_staff = True</code> and <code>is_active = True</code> to access the Django Admin console at <code>/admin/</code> and the Admin Dashboard.</li>
+                    <li><strong class="text-dark">Superuser Access (<code>is_superuser = True</code>):</strong> Has all model permissions automatically without explicitly assigning permissions.</li>
+                    <li><strong class="text-dark">Standard Customers:</strong> Have <code>is_staff = False</code>, allowing them access only to the Customer Dashboard, Product Catalog, and Checkout.</li>
+                    <li><strong class="text-dark">Audit Logs Protection:</strong> <code>OrderLog</code> is configured as read-only in the Admin site to ensure database trigger audit integrity.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

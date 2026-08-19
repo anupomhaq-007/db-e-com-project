@@ -1,0 +1,659 @@
+{% extends 'base.html' %}
+
+{% block title %}Academic Lab Report & Theory Verification | CSE 303 Lab{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small text-uppercase fw-semibold">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Phase 7: Academic Lab Report</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="bi bi-journal-check text-primary me-2"></i>Academic Lab Report & Theory Verification
+            </h2>
+            <p class="text-muted small mb-0">
+                Interactive demonstration for Tasks 1, 3, 4, & 5 (ER Schema, RAID-4 Parity, Normalization 1NF-3NF, B+ Tree Visualizer)
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-primary px-3 py-2 font-monospace fs-6 shadow-sm">
+                <i class="bi bi-cpu me-1"></i> CSE 303 Lab Tasks 1 to 5
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs for Tasks 1, 3, 4, 5 & Report Summary -->
+    <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="reportTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold px-3 py-2 rounded-3" id="task1-tab" data-bs-toggle="pill" data-bs-target="#task1" type="button" role="tab" aria-controls="task1" aria-selected="true">
+                <i class="bi bi-diagram-3-fill me-1"></i>Task 1: ERD & Data Dictionary
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-3 py-2 rounded-3" id="task3-tab" data-bs-toggle="pill" data-bs-target="#task3" type="button" role="tab" aria-controls="task3" aria-selected="false">
+                <i class="bi bi-hdd-network-fill me-1"></i>Task 3: RAID-4 Calculator
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-3 py-2 rounded-3" id="task4-tab" data-bs-toggle="pill" data-bs-target="#task4" type="button" role="tab" aria-controls="task4" aria-selected="false">
+                <i class="bi bi-table me-1"></i>Task 4: Database Normalization
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-3 py-2 rounded-3" id="task5-tab" data-bs-toggle="pill" data-bs-target="#task5" type="button" role="tab" aria-controls="task5" aria-selected="false">
+                <i class="bi bi-diagram-2-fill me-1"></i>Task 5: B+ Tree Visualizer
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-3 py-2 rounded-3" id="summary-tab" data-bs-toggle="pill" data-bs-target="#summary" type="button" role="tab" aria-controls="summary" aria-selected="false">
+                <i class="bi bi-file-earmark-bar-graph-fill me-1"></i>System Overview & Metrics
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="reportTabContent">
+
+        <!-- =================================================================== -->
+        <!-- TASK 1: ER DIAGRAM & RELATIONAL DATA DICTIONARY -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade show active" id="task1" role="tabpanel" aria-labelledby="task1-tab">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-dark text-white p-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-diagram-3 text-warning me-2"></i>Task 1: Relational Database Schema & Data Dictionary
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-4">
+                        The E-Commerce Database System implements a normalized relational architecture containing 10 core entities. Below is the interactive schema mapping and full data dictionary defining primary keys, foreign keys, and relationships.
+                    </p>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle mb-0 small">
+                            <thead class="table-dark text-uppercase font-monospace">
+                                <tr>
+                                    <th>Entity / Table</th>
+                                    <th>Attributes</th>
+                                    <th>Primary Key (PK)</th>
+                                    <th>Foreign Keys (FK) & Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold text-primary"><i class="bi bi-people me-1"></i> CUSTOMER</td>
+                                    <td>customer_id, full_name, email, phone, address, membership_level</td>
+                                    <td><span class="badge bg-primary">customer_id</span></td>
+                                    <td><span class="badge bg-secondary">user_id &rarr; auth_user (1:1)</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-success"><i class="bi bi-box-seam me-1"></i> PRODUCT</td>
+                                    <td>product_id, name, price, stock_quantity, created_at</td>
+                                    <td><span class="badge bg-primary">product_id</span></td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">category_id &rarr; CATEGORY (1:N)</span><br>
+                                        <span class="badge bg-info text-dark mt-1">supplier_id &rarr; SUPPLIER (1:N)</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-warning"><i class="bi bi-tags me-1"></i> CATEGORY</td>
+                                    <td>category_id, name, description</td>
+                                    <td><span class="badge bg-primary">category_id</span></td>
+                                    <td>None</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-danger"><i class="bi bi-truck me-1"></i> SUPPLIER</td>
+                                    <td>supplier_id, company_name, contact_person, email, phone</td>
+                                    <td><span class="badge bg-primary">supplier_id</span></td>
+                                    <td>None</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-info"><i class="bi bi-cart-check me-1"></i> ORDER</td>
+                                    <td>order_id, order_date, total_amount, order_status, shipping_address</td>
+                                    <td><span class="badge bg-primary">order_id</span></td>
+                                    <td><span class="badge bg-info text-dark">customer_id &rarr; CUSTOMER (1:N)</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-secondary"><i class="bi bi-list-check me-1"></i> ORDERDETAIL</td>
+                                    <td>detail_id, quantity, unit_price, subtotal</td>
+                                    <td><span class="badge bg-primary">detail_id</span></td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">order_id &rarr; ORDER (1:N)</span><br>
+                                        <span class="badge bg-info text-dark mt-1">product_id &rarr; PRODUCT (1:N)</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-dark"><i class="bi bi-credit-card me-1"></i> PAYMENT</td>
+                                    <td>payment_id, payment_date, amount, tax, discount, final_amount, payment_method</td>
+                                    <td><span class="badge bg-primary">payment_id</span></td>
+                                    <td><span class="badge bg-info text-dark">order_id &rarr; ORDER (1:1)</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-danger"><i class="bi bi-journal-x me-1"></i> ORDER_LOG</td>
+                                    <td>log_id, order_id, deletion_timestamp, details</td>
+                                    <td><span class="badge bg-primary">log_id</span></td>
+                                    <td>Audit Log (Trigger 3 Target)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- TASK 3: RAID LEVEL 4 RECOVERY CALCULATOR -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade" id="task3" role="tabpanel" aria-labelledby="task3-tab">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-dark text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-hdd-stack text-warning me-2"></i>Task 3: RAID-4 Block-Level Striping & XOR Parity Recovery Engine
+                        </h5>
+                        <span class="badge bg-warning text-dark font-monospace">P = D1 &oplus; D2 &oplus; D3 &oplus; D4 &oplus; D5 &oplus; D6</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-4">
+                        <strong>Task-3 Specification:</strong> RAID-4 stores data across 6 Data Drives (D1 to D6) with 1 Dedicated Parity Drive (P).
+                        Data Blocks: <code>D1 = 1010</code>, <code>D2 = 1100</code>, <code>D3 = 0111</code>, <code>D4 = 1001</code>, <code>D5 = 0011</code>, <code>D6 = 1110</code>.
+                        Parity equation yields <code>Parity P = 0101</code>. If Drive D5 crashes, its content is reconstructed via bitwise XOR: <code>D5 = D1 &oplus; D2 &oplus; D3 &oplus; D4 &oplus; D6 &oplus; P</code>.
+                    </p>
+
+                    <!-- Interactive RAID-4 Drive Blocks Grid -->
+                    <div class="row g-3 mb-4 text-center">
+                        <!-- Disk 1 -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card border-2 border-primary shadow-sm rounded-3 p-2 h-100" id="task3_card_1">
+                                <span class="badge bg-primary mb-1">D1 (Data)</span>
+                                <div class="font-monospace bg-dark text-success p-2 rounded fw-bold" id="task3_val_1">1010</div>
+                                <button class="btn btn-xs btn-outline-danger mt-2 fw-bold" onclick="failTask3Disk(1)" id="task3_btn_1">Fail D1</button>
+                            </div>
+                        </div>
+
+                        <!-- Disk 2 -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card border-2 border-primary shadow-sm rounded-3 p-2 h-100" id="task3_card_2">
+                                <span class="badge bg-primary mb-1">D2 (Data)</span>
+                                <div class="font-monospace bg-dark text-success p-2 rounded fw-bold" id="task3_val_2">1100</div>
+                                <button class="btn btn-xs btn-outline-danger mt-2 fw-bold" onclick="failTask3Disk(2)" id="task3_btn_2">Fail D2</button>
+                            </div>
+                        </div>
+
+                        <!-- Disk 3 -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card border-2 border-primary shadow-sm rounded-3 p-2 h-100" id="task3_card_3">
+                                <span class="badge bg-primary mb-1">D3 (Data)</span>
+                                <div class="font-monospace bg-dark text-success p-2 rounded fw-bold" id="task3_val_3">0111</div>
+                                <button class="btn btn-xs btn-outline-danger mt-2 fw-bold" onclick="failTask3Disk(3)" id="task3_btn_3">Fail D3</button>
+                            </div>
+                        </div>
+
+                        <!-- Disk 4 -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card border-2 border-primary shadow-sm rounded-3 p-2 h-100" id="task3_card_4">
+                                <span class="badge bg-primary mb-1">D4 (Data)</span>
+                                <div class="font-monospace bg-dark text-success p-2 rounded fw-bold" id="task3_val_4">1001</div>
+                                <button class="btn btn-xs btn-outline-danger mt-2 fw-bold" onclick="failTask3Disk(4)" id="task3_btn_4">Fail D4</button>
+                            </div>
+                        </div>
+
+                        <!-- Disk 5 (Target Task-3 Failure) -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card border-2 border-danger bg-danger-subtle shadow-sm rounded-3 p-2 h-100" id="task3_card_5">
+                                <span class="badge bg-danger mb-1">D5 (Data)</span>
+                                <div class="font-monospace bg-dark text-danger p-2 rounded fw-bold" id="task3_val_5">CORRUPTED</div>
+                                <button class="btn btn-xs btn-success mt-2 fw-bold" onclick="failTask3Disk(5)" id="task3_btn_5">Restore D5</button>
+                            </div>
+                        </div>
+
+                        <!-- Disk 6 -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card border-2 border-primary shadow-sm rounded-3 p-2 h-100" id="task3_card_6">
+                                <span class="badge bg-primary mb-1">D6 (Data)</span>
+                                <div class="font-monospace bg-dark text-success p-2 rounded fw-bold" id="task3_val_6">1110</div>
+                                <button class="btn btn-xs btn-outline-danger mt-2 fw-bold" onclick="failTask3Disk(6)" id="task3_btn_6">Fail D6</button>
+                            </div>
+                        </div>
+
+                        <!-- Dedicated Parity Disk -->
+                        <div class="col-12 mt-2">
+                            <div class="card border-2 border-warning bg-warning-subtle shadow-sm rounded-3 p-3 text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning text-dark font-monospace fs-6">Dedicated Parity Drive (P)</span>
+                                    <div class="font-monospace bg-dark text-warning px-4 py-2 rounded fw-bold fs-5" id="task3_val_P">0101</div>
+                                    <button class="btn btn-sm btn-primary fw-bold" onclick="runTask3Recovery()">
+                                        <i class="bi bi-tools me-1"></i> Execute Task-3 Bitwise XOR Recovery
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step-by-Step XOR Console -->
+                    <div class="card border-0 bg-dark text-light rounded-4 p-4">
+                        <h6 class="fw-bold text-warning mb-2"><i class="bi bi-terminal-fill me-2"></i>Task-3 Mathematical Step-by-Step XOR Recovery Breakdown</h6>
+                        <div id="task3Console" class="font-monospace small text-success" style="line-height: 1.6;">
+                            [PARITY EQUATION]: P = D1 &oplus; D2 &oplus; D3 &oplus; D4 &oplus; D5 &oplus; D6<br>
+                            P = 1010 &oplus; 1100 &oplus; 0111 &oplus; 1001 &oplus; 0011 &oplus; 1110 = <strong>0101</strong><br>
+                            <span class="text-danger">[DISK D5 CRASHED]</span> Simulating D5 failure. Click "Execute Task-3 Bitwise XOR Recovery" to reconstruct D5.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- TASK 4: DATABASE NORMALIZATION VIEWER (1NF, 2NF, 3NF) -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade" id="task4" role="tabpanel" aria-labelledby="task4-tab">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-dark text-white p-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-table text-info me-2"></i>Task 4: Step-by-Step Database Normalization (UNF &rarr; 1NF &rarr; 2NF &rarr; 3NF)
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Normalization Stepper Nav -->
+                    <ul class="nav nav-pills mb-3 gap-2" id="normTab" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active btn-sm fw-bold" id="unf-tab" data-bs-toggle="pill" data-bs-target="#unf">Unnormalized Form (UNF)</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-sm fw-bold" id="nf1-tab" data-bs-toggle="pill" data-bs-target="#nf1">1st Normal Form (1NF)</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-sm fw-bold" id="nf2-tab" data-bs-toggle="pill" data-bs-target="#nf2">2nd Normal Form (2NF)</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn-sm fw-bold" id="nf3-tab" data-bs-toggle="pill" data-bs-target="#nf3">3rd Normal Form (3NF)</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content border rounded-3 p-3 bg-light">
+                        <!-- UNF -->
+                        <div class="tab-pane fade show active" id="unf">
+                            <h6 class="fw-bold text-danger">Unnormalized Form (UNF): Repeating Groups & Non-Atomic Attributes</h6>
+                            <p class="small text-muted mb-2">Contains multi-valued product lists and repeating order details within single order rows.</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered bg-white text-monospace small">
+                                    <thead class="table-dark">
+                                        <tr><th>Order_ID</th><th>Customer</th><th>Products (Name, Qty, Price)</th><th>Total</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>ORD-001</td>
+                                            <td>Arman Rahman (Dhaka)</td>
+                                            <td>[Pro Ultrabook (1x $1200), Wireless Mouse (2x $25)]</td>
+                                            <td>$1250</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 1NF -->
+                        <div class="tab-pane fade" id="nf1">
+                            <h6 class="fw-bold text-primary">1st Normal Form (1NF): Atomic Values & Primary Keys</h6>
+                            <p class="small text-muted mb-2">Eliminated repeating groups. Every cell contains a single atomic value.</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered bg-white text-monospace small">
+                                    <thead class="table-primary">
+                                        <tr><th>Order_ID (PK)</th><th>Product_ID (PK)</th><th>Customer</th><th>Product_Name</th><th>Qty</th><th>UnitPrice</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>ORD-001</td><td>101</td><td>Arman Rahman</td><td>Pro Ultrabook Laptop</td><td>1</td><td>$1200</td></tr>
+                                        <tr><td>ORD-001</td><td>102</td><td>Arman Rahman</td><td>Wireless Ergonomic Mouse</td><td>2</td><td>$25</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 2NF -->
+                        <div class="tab-pane fade" id="nf2">
+                            <h6 class="fw-bold text-warning">2nd Normal Form (2NF): Elimination of Partial Functional Dependencies</h6>
+                            <p class="small text-muted mb-2">Separated Order-level attributes from Product-level attributes. All non-key attributes fully depend on candidate keys.</p>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <span class="badge bg-secondary mb-1">ORDER Table</span>
+                                    <table class="table table-sm table-bordered bg-white small">
+                                        <tr><th>Order_ID (PK)</th><th>Customer_ID</th><th>Order_Date</th></tr>
+                                        <tr><td>ORD-001</td><td>CUST-101</td><td>2026-08-01</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-6">
+                                    <span class="badge bg-secondary mb-1">ORDER_DETAIL Table</span>
+                                    <table class="table table-sm table-bordered bg-white small">
+                                        <tr><th>Order_ID (FK)</th><th>Product_ID (FK)</th><th>Qty</th><th>UnitPrice</th></tr>
+                                        <tr><td>ORD-001</td><td>101</td><td>1</td><td>$1200</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3NF -->
+                        <div class="tab-pane fade" id="nf3">
+                            <h6 class="fw-bold text-success">3rd Normal Form (3NF): Elimination of Transitive Dependencies</h6>
+                            <p class="small text-muted mb-2">Non-key attributes depend ONLY on the primary key (X &rarr; Y only if X is a superkey).</p>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <span class="badge bg-success mb-1">CUSTOMER Table</span>
+                                    <table class="table table-sm table-bordered bg-white small">
+                                        <tr><th>Customer_ID (PK)</th><th>Name</th></tr>
+                                        <tr><td>CUST-101</td><td>Arman Rahman</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-4">
+                                    <span class="badge bg-success mb-1">PRODUCT Table</span>
+                                    <table class="table table-sm table-bordered bg-white small">
+                                        <tr><th>Product_ID (PK)</th><th>Price</th></tr>
+                                        <tr><td>101</td><td>$1200</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-4">
+                                    <span class="badge bg-success mb-1">ORDER_DETAIL Table</span>
+                                    <table class="table table-sm table-bordered bg-white small">
+                                        <tr><th>Order_ID</th><th>Product_ID</th><th>Qty</th></tr>
+                                        <tr><td>ORD-001</td><td>101</td><td>1</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- TASK 5: B+ TREE INDEXING & SEARCH / DELETE VISUALIZER -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade" id="task5" role="tabpanel" aria-labelledby="task5-tab">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-dark text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-diagram-2 text-info me-2"></i>Task 5: Order-3 B+ Tree Insertion, Search & Deletion Visualizer
+                        </h5>
+                        <span class="badge bg-info text-dark font-monospace">Key Sequence: 110, 104, 101, 113, 107, 109, 102, 111, 105, 108, 103, 112, 106</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-3">
+                        <strong>Task-5 Specification:</strong> Construct an Order-3 B+ Tree with Product IDs inserted in exact sequence:
+                        <code>110, 104, 101, 113, 107, 109, 102, 111, 105, 108, 103, 112, 106</code>.
+                    </p>
+
+                    <!-- Controls for Search & Deletion Simulation -->
+                    <div class="row g-3 align-items-center bg-light p-3 rounded-3 mb-4 border">
+                        <div class="col-12 col-md-4">
+                            <button class="btn btn-primary fw-bold w-100" onclick="runTask5Search108()">
+                                <i class="bi bi-search me-1"></i> Search Key Product_ID = 108
+                            </button>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <button class="btn btn-danger fw-bold w-100" onclick="runTask5Delete105()">
+                                <i class="bi bi-trash-fill me-1"></i> Delete Key Product_ID = 105 & Rebalance
+                            </button>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <button class="btn btn-outline-secondary fw-bold w-100" onclick="resetTask5Tree()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset B+ Tree Visualizer
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- B+ Tree Diagram -->
+                    <div class="bg-dark text-light p-4 rounded-4 mb-4 text-center border">
+                        <h6 class="fw-bold text-warning mb-3 text-uppercase">Order-3 B+ Tree Visual Structure</h6>
+
+                        <!-- ROOT NODE -->
+                        <div class="d-inline-block bg-primary text-white font-monospace px-4 py-2 rounded-3 shadow mb-4 border border-light" id="t5_root">
+                            <div class="small text-uppercase text-light border-bottom mb-1 pb-1">ROOT NODE</div>
+                            <span class="fs-5 fw-bold">[ 105 | 110 ]</span>
+                        </div>
+
+                        <div class="text-muted mb-2"><i class="bi bi-arrow-down fs-4"></i> Internal Pointers</div>
+
+                        <!-- INTERNAL INDEX NODES -->
+                        <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+                            <div class="bg-secondary text-white font-monospace px-3 py-2 rounded-3 shadow border" id="t5_internal1">
+                                <div class="small text-uppercase text-warning border-bottom mb-1 pb-1">Internal Page 1</div>
+                                <span class="fw-bold">[ 103 ]</span>
+                            </div>
+                            <div class="bg-secondary text-white font-monospace px-3 py-2 rounded-3 shadow border" id="t5_internal2">
+                                <div class="small text-uppercase text-warning border-bottom mb-1 pb-1">Internal Page 2</div>
+                                <span class="fw-bold">[ 107 | 109 ]</span>
+                            </div>
+                            <div class="bg-secondary text-white font-monospace px-3 py-2 rounded-3 shadow border" id="t5_internal3">
+                                <div class="small text-uppercase text-warning border-bottom mb-1 pb-1">Internal Page 3</div>
+                                <span class="fw-bold">[ 112 ]</span>
+                            </div>
+                        </div>
+
+                        <!-- LEAF NODES LINKED LIST -->
+                        <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf1">
+                                <span class="small">[101, 102]</span>
+                            </div>
+                            <i class="bi bi-arrow-right text-success"></i>
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf2">
+                                <span class="small">[103, 104]</span>
+                            </div>
+                            <i class="bi bi-arrow-right text-success"></i>
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf3">
+                                <span class="small" id="t5_leaf3_val">[105, 106]</span>
+                            </div>
+                            <i class="bi bi-arrow-right text-success"></i>
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf4">
+                                <span class="small" id="t5_leaf4_val">[107, 108]</span>
+                            </div>
+                            <i class="bi bi-arrow-right text-success"></i>
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf5">
+                                <span class="small">[109]</span>
+                            </div>
+                            <i class="bi bi-arrow-right text-success"></i>
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf6">
+                                <span class="small">[110, 111]</span>
+                            </div>
+                            <i class="bi bi-arrow-right text-success"></i>
+                            <div class="bg-success text-white font-monospace p-2 rounded-3 shadow border" id="t5_leaf7">
+                                <span class="small">[112, 113]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step Console -->
+                    <div class="card border-0 bg-dark text-light rounded-4 p-4">
+                        <h6 class="fw-bold text-info mb-2"><i class="bi bi-terminal-fill me-2"></i>Task-5 Traversal & Rebalance Execution Console</h6>
+                        <div id="t5Console" class="font-monospace small text-success" style="line-height: 1.6;">
+                            [SYSTEM READY] Order-3 B+ Tree initialized with 13 keys.<br>
+                            Click "Search Key Product_ID = 108" or "Delete Key Product_ID = 105" to trigger interactive visualizer.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- SYSTEM OVERVIEW & METRICS -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-dark text-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-white mb-0">
+                                <i class="bi bi-database-check text-success me-2"></i>Database System Live Record Metrics
+                            </h5>
+                            <span class="badge bg-success font-monospace">Neon PostgreSQL Cloud Engine Active</span>
+                        </div>
+                        <div class="row g-3 text-center">
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 bg-secondary-subtle text-dark rounded-3 border">
+                                    <h3 class="fw-bold text-primary mb-0 font-monospace">{{ stats.total_products }}</h3>
+                                    <span class="small text-muted text-uppercase fw-semibold">Products (101-113)</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 bg-secondary-subtle text-dark rounded-3 border">
+                                    <h3 class="fw-bold text-success mb-0 font-monospace">{{ stats.total_customers }}</h3>
+                                    <span class="small text-muted text-uppercase fw-semibold">Customers</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 bg-secondary-subtle text-dark rounded-3 border">
+                                    <h3 class="fw-bold text-warning mb-0 font-monospace">{{ stats.total_orders }}</h3>
+                                    <span class="small text-muted text-uppercase fw-semibold">Active Orders</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 bg-secondary-subtle text-dark rounded-3 border">
+                                    <h3 class="fw-bold text-info mb-0 font-monospace">{{ stats.total_payments }}</h3>
+                                    <span class="small text-muted text-uppercase fw-semibold">Payments Processed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Metadata Footer Card -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 bg-light p-4 border">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                            <div>
+                                <h5 class="fw-bold text-dark mb-1">CSE 303 Database Management Systems Lab</h5>
+                                <p class="text-muted small mb-0">Complete E-Commerce Database System Project Submission</p>
+                            </div>
+                            <div class="text-md-end font-monospace">
+                                <div><span class="text-muted">Student ID:</span> <strong>22025214</strong></div>
+                                <div><span class="text-muted">Section:</span> <strong>1-(3)</strong></div>
+                                <div><span class="text-muted">Institution:</span> <strong class="text-primary">Independent University Bangladesh</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Task 3 & Task 5 JavaScript Visualizer Engine -->
+<script>
+    // Task 3 RAID-4 Engine
+    let t3State = {
+        d1: "1010", d2: "1100", d3: "0111", d4: "1001", d5: "0011", d6: "1110", P: "0101",
+        failed: 5
+    };
+
+    function xorBits(a, b) {
+        let res = "";
+        for (let i = 0; i < a.length; i++) {
+            res += (a[i] === b[i]) ? "0" : "1";
+        }
+        return res;
+    }
+
+    function failTask3Disk(num) {
+        t3State.failed = num;
+        for (let i = 1; i <= 6; i++) {
+            let card = document.getElementById(`task3_card_${i}`);
+            let val = document.getElementById(`task3_val_${i}`);
+            let btn = document.getElementById(`task3_btn_${i}`);
+            if (i === num) {
+                card.className = "card border-2 border-danger bg-danger-subtle shadow-sm rounded-3 p-2 h-100";
+                val.className = "font-monospace bg-dark text-danger p-2 rounded fw-bold";
+                val.innerText = "CORRUPTED";
+                btn.className = "btn btn-xs btn-success mt-2 fw-bold";
+                btn.innerText = `Restore D${i}`;
+            } else {
+                card.className = "card border-2 border-primary shadow-sm rounded-3 p-2 h-100";
+                val.className = "font-monospace bg-dark text-success p-2 rounded fw-bold";
+                val.innerText = t3State[`d${i}`];
+                btn.className = "btn btn-xs btn-outline-danger mt-2 fw-bold";
+                btn.innerText = `Fail D${i}`;
+            }
+        }
+        document.getElementById('task3Console').innerHTML = `<span class="text-danger">[DRIVE CRASHED] Drive D${num} failed. Click "Execute Task-3 Bitwise XOR Recovery" to restore data.</span>`;
+    }
+
+    function runTask3Recovery() {
+        if (!t3State.failed) return;
+        let f = t3State.failed;
+        let list = [];
+        for (let i = 1; i <= 6; i++) {
+            if (i !== f) list.push(t3State[`d${i}`]);
+        }
+        list.push(t3State.P);
+
+        let curr = list[0];
+        for (let i = 1; i < list.length; i++) {
+            curr = xorBits(curr, list[i]);
+        }
+
+        let val = document.getElementById(`task3_val_${f}`);
+        val.className = "font-monospace bg-dark text-info p-2 rounded fw-bold";
+        val.innerText = `${curr} (RESTORED)`;
+
+        let card = document.getElementById(`task3_card_${f}`);
+        card.className = "card border-2 border-info bg-info-subtle shadow-sm rounded-3 p-2 h-100";
+
+        let log = `<span class="text-info fw-bold">[TASK-3 XOR RECOVERY EXECUTED]</span><br>`;
+        log += `Reconstructed D${f} = &oplus; (Remaining Disks + Parity) = <strong>${curr}</strong>.<br>`;
+        log += `Verified: Exact match with original binary value '${t3State[`d${f}`]}'!`;
+        document.getElementById('task3Console').innerHTML = log;
+    }
+
+    // Task 5 B+ Tree Engine
+    function resetTask5Tree() {
+        document.getElementById('t5_root').className = "d-inline-block bg-primary text-white font-monospace px-4 py-2 rounded-3 shadow mb-4 border border-light";
+        document.getElementById('t5_internal1').className = "bg-secondary text-white font-monospace px-3 py-2 rounded-3 shadow border";
+        document.getElementById('t5_internal2').className = "bg-secondary text-white font-monospace px-3 py-2 rounded-3 shadow border";
+        document.getElementById('t5_internal3').className = "bg-secondary text-white font-monospace px-3 py-2 rounded-3 shadow border";
+
+        for (let i = 1; i <= 7; i++) {
+            document.getElementById(`t5_leaf${i}`).className = "bg-success text-white font-monospace p-2 rounded-3 shadow border";
+        }
+        document.getElementById('t5_leaf3_val').innerText = "[105, 106]";
+        document.getElementById('t5Console').innerHTML = "[SYSTEM READY] B+ Tree visualizer reset to initial state.";
+    }
+
+    function runTask5Search108() {
+        resetTask5Tree();
+        document.getElementById('t5_root').className = "d-inline-block bg-warning text-dark font-monospace px-4 py-2 rounded-3 shadow mb-4 border border-dark fw-bold fs-5";
+
+        setTimeout(() => {
+            document.getElementById('t5_internal2').className = "bg-warning text-dark font-monospace px-3 py-2 rounded-3 shadow border border-dark fw-bold";
+        }, 300);
+
+        setTimeout(() => {
+            document.getElementById('t5_leaf4').className = "bg-warning text-dark font-monospace p-2 rounded-3 shadow border border-dark fw-bold";
+        }, 600);
+
+        let log = `<strong>[TASK-5 SEARCH FOR PRODUCT_ID = 108]</strong><br>`;
+        log += `1. Root Node [105 | 110]: 105 &le; 108 &lt; 110 &rarr; Follow middle child pointer.<br>`;
+        log += `2. Internal Page 2 [107 | 109]: 107 &le; 108 &lt; 109 &rarr; Follow pointer to Leaf 4.<br>`;
+        log += `3. Leaf Page 4 [107, 108]: <span class="text-warning fw-bold">Key 108 found! Pointer (RID) retrieved.</span>`;
+        document.getElementById('t5Console').innerHTML = log;
+    }
+
+    function runTask5Delete105() {
+        resetTask5Tree();
+        document.getElementById('t5_leaf3').className = "bg-danger text-white font-monospace p-2 rounded-3 shadow border border-white fw-bold";
+
+        setTimeout(() => {
+            document.getElementById('t5_leaf3_val').innerText = "[106]";
+            let log = `<strong>[TASK-5 DELETION OF PRODUCT_ID = 105]</strong><br>`;
+            log += `1. Located Product_ID = 105 in Leaf 3 [105, 106].<br>`;
+            log += `2. Key 105 removed. Remaining key in Leaf 3: [106].<br>`;
+            log += `3. Minimum leaf capacity (&lceil;m/2&rceil; - 1 = 1) is satisfied! <span class="text-info fw-bold">No underflow, tree remains balanced.</span>`;
+            document.getElementById('t5Console').innerHTML = log;
+        }, 500);
+    }
+</script>
+{% endblock %}

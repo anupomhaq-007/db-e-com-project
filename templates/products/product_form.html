@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'Edit' %}Edit Product #{{ product.product_id }}{% else %}Add New Product{% endif %} | E-Commerce Database Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
+                    <h4 class="fw-bold mb-0">
+                        <i class="bi bi-box-seam text-primary me-2"></i>
+                        {% if action == 'Edit' %}Edit Product #{{ product.product_id }}{% else %}Add New Inventory Product{% endif %}
+                    </h4>
+                    <a href="{% url 'product_list' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="productForm">
+                        {% csrf_token %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-3">
+                                <label class="form-label small fw-semibold">Product ID <span class="text-danger">*</span></label>
+                                <input type="number" name="product_id" class="form-control" value="{% if action == 'Edit' %}{{ product.product_id }}{% else %}{{ next_product_id }}{% endif %}" {% if action == 'Edit' %}readonly disabled{% else %}required{% endif %}>
+                            </div>
+                            <div class="col-12 col-md-9">
+                                <label class="form-label small fw-semibold">Product Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" value="{{ product.name|default:'' }}" required placeholder="e.g. Dell XPS 15">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Brand <span class="text-danger">*</span></label>
+                                <input type="text" name="brand" class="form-control" value="{{ product.brand|default:'' }}" required placeholder="e.g. Dell">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Unit Price ($) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0" name="price" class="form-control" value="{{ product.price|default:'' }}" required placeholder="1499.99">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Stock Quantity <span class="text-danger">*</span></label>
+                                <input type="number" name="stock_quantity" class="form-control" value="{{ product.stock_quantity|default:20 }}" required>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Category</label>
+                                <select name="category_id" class="form-select">
+                                    <option value="">-- Select Category --</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.category_id }}" {% if product.category_id == cat.category_id %}selected{% endif %}>
+                                        {{ cat.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Supplier</label>
+                                <select name="supplier_id" class="form-select">
+                                    <option value="">-- Select Supplier --</option>
+                                    {% for sup in suppliers %}
+                                    <option value="{{ sup.supplier_id }}" {% if product.supplier_id == sup.supplier_id %}selected{% endif %}>
+                                        {{ sup.company_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Image Upload & Cloudinary Management Section -->
+                        <div class="card bg-light border p-3 mb-3 rounded-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="form-label fw-bold text-dark mb-0">
+                                    <i class="bi bi-cloud-upload text-primary me-1"></i> Product Image (Cloudinary Storage)
+                                </label>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">Deferred Upload</span>
+                            </div>
+
+                            <div class="row g-3 align-items-center">
+                                <div class="col-12 col-md-7">
+                                    <label class="form-label small text-muted mb-1">Upload Photo from Device:</label>
+                                    <input type="file" name="product_image" id="productImageInput" accept="image/*" class="form-control form-control-sm mb-2">
+                                    
+                                    <label class="form-label small text-muted mb-1">Or Existing Cloudinary URL:</label>
+                                    <input type="url" name="image_url" id="imageUrlInput" class="form-control form-control-sm" value="{{ product.image_url|default:'' }}" placeholder="https://res.cloudinary.com/...">
+                                    
+                                    <div class="form-text small text-secondary mt-2">
+                                        <i class="bi bi-shield-check text-success me-1"></i>
+                                        <strong>Deferred Upload Protocol:</strong> Image is held locally in browser preview and uploaded to Cloudinary <em>only when you confirm creation</em> to prevent incomplete/draft images in cloud storage.
+                                    </div>
+                                </div>
+
+                                <!-- Local/Existing Preview Container -->
+                                <div class="col-12 col-md-5 text-center border-start ps-md-3">
+                                    <span class="d-block small text-muted fw-semibold mb-1">Live Image Preview</span>
+                                    <div class="bg-white border rounded p-2 d-flex align-items-center justify-content-center overflow-hidden shadow-sm" style="min-height: 120px; max-height: 140px;">
+                                        <img id="imagePreview" src="{% if product %}{{ product.get_image_url }}{% else %}https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=300&q=80{% endif %}" alt="Product Preview" class="img-fluid rounded" style="max-height: 120px; object-fit: contain;">
+                                    </div>
+                                    <span id="previewStatusBadge" class="badge bg-secondary-subtle text-dark mt-1 small">
+                                        {% if product.image_url %}Cloudinary URL active{% else %}Default Placeholder{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold">Description</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Product details or specifications...">{{ product.description|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                            <a href="{% url 'product_list' %}" class="btn btn-secondary px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold" id="submitBtn">
+                                {% if action == 'Edit' %}Save Product Changes{% else %}Create Product{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('productImageInput');
+        const urlInput = document.getElementById('imageUrlInput');
+        const previewImg = document.getElementById('imagePreview');
+        const previewStatus = document.getElementById('previewStatusBadge');
+
+        // Handle local file selection preview without uploading
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const objectUrl = URL.createObjectURL(file);
+                previewImg.src = objectUrl;
+                previewStatus.className = 'badge bg-warning text-dark mt-1 small';
+                previewStatus.textContent = 'Local File Selected (Will upload to Cloudinary on submit)';
+            }
+        });
+
+        // Handle direct URL input preview
+        urlInput.addEventListener('input', function(e) {
+            const url = e.target.value.trim();
+            if (url && !fileInput.files.length) {
+                previewImg.src = url;
+                previewStatus.className = 'badge bg-info text-dark mt-1 small';
+                previewStatus.textContent = 'Cloudinary URL Preview';
+            }
+        });
+    });
+</script>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

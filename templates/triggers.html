@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+
+{% block title %}Database Triggers Test Bench (Task-2 Triggers a-c) | CSE 303 Lab{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small text-uppercase fw-semibold">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Database Triggers (Task-2)</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Database Triggers Test Bench
+            </h2>
+            <p class="text-muted small mb-0">
+                Interactive verification portal for database constraints, stock validation, payment computation, and audit logs
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-warning text-dark px-3 py-2 font-monospace fs-6 shadow-sm">
+                <i class="bi bi-cpu me-1"></i> PL/pgSQL & Django Signals Engine
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs for Triggers a, b, c -->
+    <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="triggerTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold px-4 rounded-3" id="trigger1-tab" data-bs-toggle="pill" data-bs-target="#trigger1" type="button" role="tab" aria-controls="trigger1" aria-selected="true">
+                <i class="bi bi-shield-lock-fill me-2"></i>Trigger 1: Stock Validation
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 rounded-3" id="trigger2-tab" data-bs-toggle="pill" data-bs-target="#trigger2" type="button" role="tab" aria-controls="trigger2" aria-selected="false">
+                <i class="bi bi-calculator-fill me-2"></i>Trigger 2: Payment Auto-Calc
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 rounded-3" id="trigger3-tab" data-bs-toggle="pill" data-bs-target="#trigger3" type="button" role="tab" aria-controls="trigger3" aria-selected="false">
+                <i class="bi bi-journal-text me-2"></i>Trigger 3: Order Deletion Audit
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="triggerTabContent">
+        
+        <!-- =================================================================== -->
+        <!-- TRIGGER 1: STOCK AVAILABILITY VALIDATION -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade show active" id="trigger1" role="tabpanel" aria-labelledby="trigger1-tab">
+            <div class="row g-4">
+                <!-- Form & Tester Card -->
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-shield-fill-x text-danger me-2"></i>Trigger 1: Stock Validation Tester
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small">
+                                <strong>Constraint Rule:</strong> Before inserting an order detail item, verify if <code>requested_quantity &le; stock_quantity</code>. If quantity exceeds stock, the trigger raises an exception and rolls back the transaction.
+                            </p>
+
+                            {% if trigger1_msg %}
+                            <div class="alert alert-{{ trigger1_status|default:'info' }} rounded-3 p-3 mb-4 shadow-sm">
+                                <h6 class="fw-bold mb-1">
+                                    {% if trigger1_status == 'success' %}
+                                        <i class="bi bi-check-circle-fill me-2"></i>Trigger Execution Passed
+                                    {% else %}
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Trigger Execution Blocked
+                                    {% endif %}
+                                </h6>
+                                <p class="small font-monospace mb-0">{{ trigger1_msg }}</p>
+                            </div>
+                            {% endif %}
+
+                            <form method="POST" action="{% url 'triggers' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="test_trigger1">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark small text-uppercase">Select Customer</label>
+                                    <select name="customer_id" class="form-select font-monospace" required>
+                                        {% for c in customers %}
+                                        <option value="{{ c.customer_id }}">{{ c.full_name }} ({{ c.membership_level }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark small text-uppercase">Select Target Product</label>
+                                    <select name="product_id" class="form-select font-monospace" required id="productSelect">
+                                        {% for p in products %}
+                                        <option value="{{ p.product_id }}" data-stock="{{ p.stock_quantity }}">
+                                            #{{ p.product_id }} - {{ p.name }} (Current Stock: {{ p.stock_quantity }} units, Price: ${{ p.price }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-dark small text-uppercase">Order Quantity</label>
+                                    <input type="number" name="quantity" class="form-control font-monospace" value="5" min="1" required id="quantityInput">
+                                    <div class="form-text small">
+                                        <span class="badge bg-secondary-subtle text-dark" id="stockBadge">Tip: Try entering quantity > product stock to test trigger exception.</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary fw-bold py-2 rounded-3 shadow-sm">
+                                        <i class="bi bi-cart-plus-fill me-1"></i> Submit Order & Test Trigger 1
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SQL Definition & Inventory Status -->
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-code-slash text-warning me-2"></i>PostgreSQL Trigger 1 SQL Code
+                            </h6>
+                        </div>
+                        <div class="card-body p-3 bg-dark">
+<pre class="text-success font-monospace mb-0 small" style="line-height: 1.4;"><code>CREATE OR REPLACE FUNCTION check_stock_before_order()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.quantity > (SELECT stock_quantity FROM store_product WHERE product_id = NEW.product_id) THEN
+        RAISE EXCEPTION 'Insufficient stock! Requested % units exceeds available stock.', NEW.quantity;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_stock
+BEFORE INSERT ON store_orderdetail
+FOR EACH ROW EXECUTE FUNCTION check_stock_before_order();</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Live Products Stock Table -->
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-white p-3 border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="bi bi-box-seam text-primary me-2"></i>Live Inventory Stock Levels
+                            </h6>
+                        </div>
+                        <div class="table-responsive" style="max-height: 250px;">
+                            <table class="table table-hover table-striped align-middle mb-0 small">
+                                <thead class="table-light font-monospace text-uppercase">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Product Name</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in products %}
+                                    <tr>
+                                        <td class="font-monospace text-muted">#{{ p.product_id }}</td>
+                                        <td class="fw-semibold">{{ p.name }}</td>
+                                        <td class="font-monospace">${{ p.price }}</td>
+                                        <td>
+                                            {% if p.stock_quantity == 0 %}
+                                                <span class="badge bg-danger">0 Out of Stock</span>
+                                            {% elif p.stock_quantity < 10 %}
+                                                <span class="badge bg-warning text-dark">{{ p.stock_quantity }} Low Stock</span>
+                                            {% else %}
+                                                <span class="badge bg-success">{{ p.stock_quantity }} Available</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- TRIGGER 2: AUTOMATED PAYMENT CALCULATION -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade" id="trigger2" role="tabpanel" aria-labelledby="trigger2-tab">
+            <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-calculator text-success me-2"></i>Trigger 2: Payment Calculation Tester
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small">
+                                <strong>Constraint Rule:</strong> Whenever a payment record is inserted or updated, the trigger automatically calculates <code>final_amount = amount + tax - discount</code>.
+                            </p>
+
+                            {% if trigger2_msg %}
+                            <div class="alert alert-success rounded-3 p-3 mb-4 shadow-sm">
+                                <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Trigger Calculation Completed</h6>
+                                <p class="small font-monospace mb-0">{{ trigger2_msg }}</p>
+                            </div>
+                            {% endif %}
+
+                            <form method="POST" action="{% url 'triggers' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="test_trigger2">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark small text-uppercase">Select Order</label>
+                                    <select name="order_id" class="form-select font-monospace" required>
+                                        {% for o in orders %}
+                                        <option value="{{ o.order_id }}">Order #{{ o.order_id }} - {{ o.customer.full_name }} (${{ o.total_amount }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <label class="form-label fw-bold text-dark small text-uppercase">Amount ($)</label>
+                                        <input type="number" step="0.01" name="amount" class="form-control font-monospace" value="1200.00" required id="pAmount">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label fw-bold text-dark small text-uppercase">Tax ($)</label>
+                                        <input type="number" step="0.01" name="tax" class="form-control font-monospace" value="60.00" required id="pTax">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label fw-bold text-dark small text-uppercase">Discount ($)</label>
+                                        <input type="number" step="0.01" name="discount" class="form-control font-monospace" value="15.00" required id="pDiscount">
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-dark small text-uppercase">Payment Method</label>
+                                    <select name="payment_method" class="form-select">
+                                        <option value="Credit Card">Credit Card</option>
+                                        <option value="Bank Transfer">Bank Transfer</option>
+                                        <option value="PayPal">PayPal</option>
+                                        <option value="Bkash/Nagad">Bkash / Nagad</option>
+                                    </select>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success fw-bold py-2 rounded-3 shadow-sm">
+                                        <i class="bi bi-cpu-fill me-1"></i> Fire Payment Trigger 2
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SQL Code & Payments Log -->
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-code-slash text-warning me-2"></i>PostgreSQL Trigger 2 SQL Code
+                            </h6>
+                        </div>
+                        <div class="card-body p-3 bg-dark">
+<pre class="text-info font-monospace mb-0 small" style="line-height: 1.4;"><code>CREATE OR REPLACE FUNCTION calculate_final_payment()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.final_amount := NEW.amount + NEW.tax - NEW.discount;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_auto_payment_calc
+BEFORE INSERT OR UPDATE ON store_payment
+FOR EACH ROW EXECUTE FUNCTION calculate_final_payment();</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-white p-3 border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="bi bi-receipt text-success me-2"></i>Recent Payment Records
+                            </h6>
+                        </div>
+                        <div class="table-responsive" style="max-height: 250px;">
+                            <table class="table table-hover table-striped align-middle mb-0 small">
+                                <thead class="table-light font-monospace text-uppercase">
+                                    <tr>
+                                        <th>Payment ID</th>
+                                        <th>Order ID</th>
+                                        <th>Base Amount</th>
+                                        <th>Tax</th>
+                                        <th>Discount</th>
+                                        <th>Final Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in payments %}
+                                    <tr>
+                                        <td class="font-monospace text-muted">#{{ p.payment_id }}</td>
+                                        <td class="font-monospace">Order #{{ p.order.order_id }}</td>
+                                        <td class="font-monospace">${{ p.amount }}</td>
+                                        <td class="font-monospace text-danger">+${{ p.tax }}</td>
+                                        <td class="font-monospace text-success">-${{ p.discount }}</td>
+                                        <td class="font-monospace fw-bold text-primary">${{ p.final_amount }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">No payments processed yet.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- TRIGGER 3: ORDER DELETION AUDIT LOGGER -->
+        <!-- =================================================================== -->
+        <div class="tab-pane fade" id="trigger3" role="tabpanel" aria-labelledby="trigger3-tab">
+            <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-journal-x text-danger me-2"></i>Trigger 3: Order Deletion Audit Tester
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small">
+                                <strong>Constraint Rule:</strong> When an Order record is deleted from <code>store_order</code>, an AFTER DELETE trigger automatically inserts an immutable log row into <code>store_orderlog</code> containing the deleted <code>order_id</code>, timestamp, and metadata.
+                            </p>
+
+                            {% if trigger3_msg %}
+                            <div class="alert alert-warning rounded-3 p-3 mb-4 shadow-sm">
+                                <h6 class="fw-bold mb-1"><i class="bi bi-shield-check me-2"></i>Audit Log Trigger Fired</h6>
+                                <p class="small font-monospace mb-0">{{ trigger3_msg }}</p>
+                            </div>
+                            {% endif %}
+
+                            <h6 class="fw-bold text-dark small text-uppercase mb-3">Active Database Orders (Click to Delete & Fire Trigger 3)</h6>
+                            <div class="table-responsive mb-3" style="max-height: 300px;">
+                                <table class="table table-hover align-middle mb-0 small">
+                                    <thead class="table-light font-monospace text-uppercase">
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Total</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for o in orders %}
+                                        <tr>
+                                            <td class="font-monospace fw-bold">#{{ o.order_id }}</td>
+                                            <td>{{ o.customer.full_name }}</td>
+                                            <td class="font-monospace">${{ o.total_amount }}</td>
+                                            <td>
+                                                <form method="POST" action="{% url 'triggers' %}" onsubmit="return confirm('Are you sure you want to delete Order #{{ o.order_id }}? This will fire Trigger 3!');">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="test_trigger3">
+                                                    <input type="hidden" name="order_id" value="{{ o.order_id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-2">
+                                                        <i class="bi bi-trash-fill me-1"></i> Delete & Log
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-3">No active orders available to delete.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SQL Code & ORDER_LOG Table -->
+                <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-code-slash text-warning me-2"></i>PostgreSQL Trigger 3 SQL Code
+                            </h6>
+                        </div>
+                        <div class="card-body p-3 bg-dark">
+<pre class="text-warning font-monospace mb-0 small" style="line-height: 1.4;"><code>CREATE OR REPLACE FUNCTION audit_deleted_order()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO store_orderlog (order_id, deletion_timestamp, details)
+    VALUES (OLD.order_id, NOW(), CONCAT('AUDIT LOG: Order #', OLD.order_id, ' deleted. Total: $', OLD.total_amount));
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_audit_order_deletion
+AFTER DELETE ON store_order
+FOR EACH ROW EXECUTE FUNCTION audit_deleted_order();</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-dark text-white p-3">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-file-earmark-text text-warning me-2"></i>Live <code>ORDER_LOG</code> Audit Table
+                            </h6>
+                        </div>
+                        <div class="table-responsive" style="max-height: 250px;">
+                            <table class="table table-hover table-striped align-middle mb-0 small">
+                                <thead class="table-light font-monospace text-uppercase">
+                                    <tr>
+                                        <th>Log ID</th>
+                                        <th>Deleted Order ID</th>
+                                        <th>Timestamp</th>
+                                        <th>Audit Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in audit_logs %}
+                                    <tr>
+                                        <td class="font-monospace text-muted">#{{ log.log_id }}</td>
+                                        <td class="font-monospace fw-bold text-danger">#{{ log.order_id }}</td>
+                                        <td class="font-monospace text-muted" style="font-size: 0.75rem;">{{ log.deletion_timestamp|date:"Y-m-d H:i:s" }}</td>
+                                        <td class="font-monospace text-dark" style="font-size: 0.8rem;">{{ log.details }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">ORDER_LOG is currently empty. Delete an order on the left to fire Trigger 3!</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

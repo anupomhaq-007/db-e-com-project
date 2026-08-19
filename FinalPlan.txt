@@ -1,0 +1,112 @@
+================================================================================
+          E-COMMERCE DATABASE SYSTEM — COMPREHENSIVE ANALYSIS & FINAL PLAN
+          Course: CSE 303 Lab (Summer 2026) — Mini Project Report Specification
+================================================================================
+
+1. ANALYSIS OF SHARED FILES & KEY DATA POINTS
+--------------------------------------------------------------------------------
+A. MAIN PROJECT REQUIREMENT DOCUMENT (E-commerece-Database-System.docx.pdf)
+   • Course: CSE 303 Lab (Database Management), Summer 2026.
+   • Project Title: E-Commerce Management Database System.
+   • Total Marks: 150 (divided across 6 primary academic tasks):
+     
+     - Task-1: Designing the Database (20 Marks)
+       * Identify entities, attribute lists, domains, candidate keys, and primary keys.
+       * Draw a detailed Entity-Relationship (ER) diagram using standard symbols, Crow's Foot notation, cardinality, weak entities, and relationship roles.
+     
+     - Task-2: Database Creation, Management & SQL Queries/Triggers (35 Marks)
+       * Create tables, relationships, data types (domains), and integrity constraints.
+       * 10 Mandatory Analytical SQL Queries (a to j):
+         (a) Customer Profiles: Display full_name, email, membership_level for all customers.
+         (b) Product Details: Display name, brand, price for all products.
+         (c) Customer Name Search: Find customers whose name contains "man" -> display email.
+         (d) Order Summary: Display order_id, customer_name, order_date, total_amount.
+         (e) Above-Average Price: Find products whose price > average price of all products.
+         (f) Category Inventory Count: Display total number of products in each category.
+         (g) High-Value Categories: Find categories where average product price > 5,000.
+         (h) Warehouse Logistics: Display warehouse_name, location, storage_capacity.
+         (i) Pending Orders: Display customer_name and order_date for all pending orders.
+         (j) Customer Revenue: Display total purchase amount spent by each customer.
+       * 3 Mandatory SQL Triggers:
+         (a) Stock Validation Trigger: Automatically check product stock availability before inserting an order detail. Prevent order if quantity exceeds stock.
+         (b) Payment Calculation Trigger: Automatically update Final_Amount = Total_Amount + Tax - Discount before updating/inserting a payment record.
+         (c) Deletion Audit Trigger: Store deleted order information (ID, timestamp, details) in an order log table whenever an order is deleted.
+
+     - Task-3: Scenario-Based Database Recovery — RAID Level 4 (18 Marks)
+       * System: 6 Data Disks (D1..D6), 1 Parity Disk (P), 4-bit blocks using XOR.
+       * Data Blocks: D1=1010 (Product), D2=1100 (Category), D3=0111 (Customer), D4=1001 (Supplier), D5=0011 (Order), D6=1110 (Payment).
+       * Parity Calculation: P = D1 ⊕ D2 ⊕ D3 ⊕ D4 ⊕ D5 ⊕ D6 = 0101.
+       * Recovery Verification: If D5 fails, D5 is recovered via D1 ⊕ D2 ⊕ D3 ⊕ D4 ⊕ D6 ⊕ P = 0011 (matches original).
+
+     - Task-4: Database Normalization (22 Marks)
+       * Apply 1NF (atomic values, remove repeating order items), 2NF (remove partial key dependencies), and 3NF (remove transitive dependencies) to the unnormalized sample table (P001..P006).
+
+     - Task-5: Hashing and Indexing — B-Tree & B+ Tree (25 Marks)
+       * Index Key: Product_ID (101 to 113).
+       * Insertion Sequence: 110, 104, 101, 113, 107, 109, 102, 111, 105, 108, 103, 112, 106.
+       * Capacity: Order 3 (max 3 keys per node). Demonstrate search for 108 and deletion of 105.
+
+     - Task-6: Web Application with User Authentication & Database Connectivity (30 Marks)
+       * Develop a simple, responsive E-Commerce Management Web Application in Django.
+       * Core Requirements:
+         1. User Registration: Create accounts with username, email, password.
+         2. User Login: Secure login authentication.
+         3. Product Management Page: Access product records after login.
+         4. Basic CRUD Operations: Create (add new product), Read (view all products), Update (edit existing product), Delete (remove product record).
+
+
+2. ER-DIAGRAM EVALUATION & CORRECTIONS REQUIRED (from ERD analysis)
+--------------------------------------------------------------------------------
+Review of the provided ER Diagram image against the CSE 303 project specification reveals four key corrections applied to our schema:
+1. Merged duplicate CUSTOMER entity table into a single canonical table (`Customer_ID PK`, `Full_Name`, `Email`, `Phone_Number`, `Address`, `Registration_Date`, `Membership_Level`).
+2. Removed invalid "stores" line between `ORDER_LOG` and `WAREHOUSE` (`ORDER_LOG` is purely an audit logging table for deleted orders).
+3. Resolved Many-to-Many relationship between `WAREHOUSE` and `PRODUCT` via `WAREHOUSE_STOCK` bridge table.
+4. Corrected 1:1 relationship between `ORDER` and `PAYMENT` (`Order_ID FK`).
+
+=== CANONICAL ER SCHEMA (Crow's Foot Notation) ===
+CATEGORY ||--o{ PRODUCT : "organizes"
+SUPPLIER ||--o{ PRODUCT : "provides"
+CUSTOMER ||--o{ ORDER : "places"
+ORDER ||--o{ ORDER_DETAILS : "contains" (Weak Entity)
+PRODUCT ||--o{ ORDER_DETAILS : "included_in"
+ORDER ||--|| PAYMENT : "processed_by"
+WAREHOUSE ||--o{ WAREHOUSE_STOCK : "stores"
+PRODUCT ||--o{ WAREHOUSE_STOCK : "stored_in"
+ORDER ||--o| ORDER_LOG : "audited_by" (Trigger log)
+
+
+3. WEB APPLICATION PLANNING (STRICTLY REQUIREMENT-FOCUSED DJANGO SITE)
+--------------------------------------------------------------------------------
+To adhere strictly to the faculty requirement ("keep the website simple and avoid complex extra feature, just follow the project requirement"), the Django application `E_Com_Website` will feature 4 cohesive tabs covering 100% of Tasks 1 to 6:
+
+A. TAB 1: USER AUTHENTICATION & PRODUCT MANAGEMENT (Task-6 CRUD)
+   • Django auth views for User Registration & Login.
+   • Protected Product Management page displaying 13 faculty dataset items (Product IDs 101–113).
+   • Basic CRUD Operations: Add product, View products, Edit product details, Delete product.
+
+B. TAB 2: ANALYTICAL SQL QUERIES CENTER (Task-2 Queries a–j)
+   • Interactive query execution panel displaying results and raw SQL queries for all 10 faculty questions (a to j).
+
+C. TAB 3: SQL TRIGGERS TEST BENCH (Task-2 Triggers a–c)
+   • Interactive testing forms for:
+     1. Stock Validation Trigger (prevents ordering quantity exceeding stock).
+     2. Payment Final_Amount Calculation Trigger (`Final_Amount = Total_Amount + Tax - Discount`).
+     3. Order Deletion Audit Log Trigger (writes deleted order details into `ORDER_LOG`).
+
+D. TAB 4: ACADEMIC LAB REPORT & ERD VERIFICATION (Tasks 1, 3, 4, 5)
+   • Corrected ER Diagram Specification & Data Dictionary (Task-1).
+   • Interactive RAID-4 Parity & Recovery Calculator (Task-3: XOR parity calculation & D5 block recovery).
+   • Database Normalization (Task-4: 1NF, 2NF, and 3NF step-by-step tables).
+   • B+ Tree Indexing Visualization (Task-5: Order-3 insertion sequence 110..106, search path for 108, deletion of 105).
+
+
+4. ENVIRONMENT SETUP & PROJECT STRUCTURE
+--------------------------------------------------------------------------------
+• Backend Framework: Django 5.2.16 (Zero React, pure Django + Bootstrap 5 HTML/CSS/JS).
+• Database: PostgreSQL (Neon / Railway PostgreSQL) with local SQLite fallback.
+• Project Name: `E_Com_Website`
+• Host Configuration: `ALLOWED_HOSTS = ['*']`, `CSRF_TRUSTED_ORIGINS` (including Cloud Run & Railway `*.railway.app`), `X_FRAME_OPTIONS = 'ALLOWALL'`.
+• Server Command: `python3 server.py` (with Gunicorn multi-worker WSGI layer and automated migration/static collection).
+• Deployment Targets: Cloud Run & Railway (pre-configured with `Procfile`, `railway.json`, `nixpacks.toml`, `runtime.txt`).
+• Status: All React dependencies removed, production WSGI server & static assets verified, project 100% prepared for Railway hosting.
+

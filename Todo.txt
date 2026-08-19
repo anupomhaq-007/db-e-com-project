@@ -1,0 +1,219 @@
+================================================================================
+          E-COMMERCE MANAGEMENT DATABASE SYSTEM — ROADMAP & TASK LIST
+          Course: CSE 303 Lab (Summer 2026) | Framework: Django + Bootstrap 5 + Neon PostgreSQL
+================================================================================
+
+PROJECT OVERVIEW & ROADMAP
+--------------------------------------------------------------------------------
+This project implements a full-stack E-Commerce Database System adhering strictly 
+to CSE 303 Lab requirements (E-commerece-Database-System.docx.pdf). The application is 
+built using HTML5, Bootstrap 5 CSS/JS, and Bootstrap Icons (zero React), with Django 5.2 
+as the backend connected to a Neon PostgreSQL cloud database.
+
+================================================================================
+PHASE 1: ENVIRONMENT & DATABASE ARCHITECTURE (Task-1 & Task-2 Foundation)
+================================================================================
+[x] 1.1 Python & Django Environment Setup
+    - Install Python 3.11, Django 5.2, psycopg2-binary, dj-database-url, and dependencies.
+    - Create Django project 'E_Com_Website'.
+    - Configure server.py for single-port execution (0.0.0.0:3000).
+
+[x] 1.2 Neon PostgreSQL & Settings Configuration
+    - Configure settings.py to parse DATABASE_URL via dj-database-url for Neon PostgreSQL.
+    - Configure ALLOWED_HOSTS = ['*'], CSRF_TRUSTED_ORIGINS, and X_FRAME_OPTIONS = 'ALLOWALL'.
+    - Configure TEMPLATES and STATICFILES directories.
+
+[x] 1.3 Django Relational Models & Schema Definition (Task-1 Data Dictionary)
+    - Category: category_id (PK), name, description.
+    - Supplier: supplier_id (PK), company_name, contact_person, phone, email, address.
+    - Product: product_id (PK, 101..113), name, brand, price, stock_quantity, description, availability_status, category (FK), supplier (FK).
+    - Customer: customer_id (PK), user (OneToOne to auth.User), full_name, email, phone, address, registration_date, membership_level.
+    - Warehouse: warehouse_id (PK), warehouse_name, location, storage_capacity.
+    - WarehouseStock: warehouse (FK), product (FK), stock_quantity (Many-to-Many Bridge).
+    - Order: order_id (PK), customer (FK), order_date, order_status, shipping_address, total_amount.
+    - OrderDetail: order (FK), product (FK), quantity, unit_price, subtotal (Weak Entity).
+    - Payment: payment_id (PK), order (OneToOne FK), payment_date, amount, tax, discount, final_amount, payment_method, payment_status.
+    - OrderLog: log_id (PK), order_id, deletion_timestamp, details.
+
+[x] 1.4 Standalone DDL Schema Export (`schema.sql`)
+    - Created schema.sql containing full PostgreSQL DDL scripts for all 10 tables, primary keys, foreign keys, check constraints, and trigger functions.
+
+[x] 1.5 Database Initial Migration & Data Seeding
+    - Seed initial dataset:
+      * 13 Products (Product_ID 101 to 113: Laptop, Mobile Phone, Printer, Keyboard, Mouse, Monitor, Scanner, Router, SSD, Graphics Card, Webcam, Power Bank, Smart Watch).
+      * Standard Categories, Suppliers, Warehouses, Customers, Orders, and Payments.
+
+================================================================================
+PHASE 2: FRONTEND UI COMPONENTS & LAYOUT (HTML5 + Bootstrap 5 + Icons)
+================================================================================
+[x] 2.1 Base Layout Template (`templates/base.html`)
+    - HTML5 boilerplate with responsive viewport meta tags.
+    - CDN links for Bootstrap 5.3 CSS & JS bundles, Bootstrap Icons (bi-icon library).
+    - Clean top navigation, main container block, interactive notification toast container, and footer.
+
+[x] 2.2 Component 1: Navigation Bar (`templates/components/navbar.html`)
+    - Brand Logo & Title: "E-Commerce DB Portal" with shop icon.
+    - Navigation Links:
+      * Home / Products Catalog
+      * CRUD Management (Protected)
+      * Analytical Queries (a-j)
+      * Database Triggers (a-c)
+      * Academic Lab Report (Tasks 1, 3, 4, 5)
+    - Global Inventory Search Input box.
+    - Cart Counter pill with icon (showing item count).
+    - Authentication User Menu.
+
+[x] 2.3 Component 2: Header / Hero Carousel Slider (`templates/components/hero_slider.html`)
+    - Bootstrap 5 responsive banner slider.
+    - Slide 1: CSE 303 Lab E-Commerce Management System (Summer 2026).
+    - Slide 2: Real-time Product & Stock Management (Product IDs 101 to 113).
+    - Slide 3: Automated Database Triggers & Analytical Query Engine.
+
+[x] 2.4 Component 3: Product Placeholder Grid & Product Cards (`templates/components/product_card.html`)
+    - Responsive grid (1 col mobile, 2 col tablet, 3-4 col desktop).
+    - Card Header: Product Category badge & Availability status indicator (In Stock / Out of Stock).
+    - Card Body: Product Name, Brand tag, Price tag (Formatted currency), Stock level meter.
+    - Card Footer Action Buttons.
+
+[x] 2.5 Component 4: Footer Component (`templates/components/footer.html`)
+    - System info & CSE 303 Lab Project metadata.
+    - Quick Links & Database Specs.
+    - Student ID: 22025214, Section 1-(3), Independent University Bangladesh.
+
+================================================================================
+PHASE 3: USER AUTHENTICATION & ACCESS CONTROL (Task-6 Requirement)
+================================================================================
+[x] 3.1 User Registration (`templates/auth/register.html`)
+    - Username, Email, Password, Membership Level selection.
+    - Django view handling account creation and Customer profile linkage.
+
+[x] 3.2 User Login & Logout (`templates/auth/login.html`)
+    - Login authentication with CSRF protection and error message toasts.
+    - Session management and protected page access.
+
+================================================================================
+PHASE 4: PRODUCT MANAGEMENT & CRUD SYSTEM (Task-6 Requirement)
+================================================================================
+[x] 4.1 Product List View (Read)
+    - Interactive data table showing Product IDs (101-113), Name, Brand, Price, Stock, Category, Supplier.
+    - Filter controls by Category, Brand, and Stock level.
+
+[x] 4.2 Product Create View (Create)
+    - Modal & dedicated form to insert new products into the database.
+
+[x] 4.3 Product Update View (Update)
+    - Edit form pre-populated with existing product record.
+
+[x] 4.4 Product Delete View (Delete)
+    - Delete button with confirmation modal to prevent accidental removal.
+
+================================================================================
+PHASE 5: ANALYTICAL SQL QUERIES CENTER (Task-2, Queries a to j)
+================================================================================
+[x] 5.1 Interactive Query Runner Page (`templates/queries.html`)
+    - Sidebar selector for all 10 mandatory faculty SQL queries:
+      (a) Customer Profiles: full_name, email, membership_level.
+      (b) Product Details: name, brand, price.
+      (c) Customer Search: Name containing 'man' -> email addresses.
+      (d) Order Summary: order_id, customer_name, order_date, total_amount.
+      (e) Above-Average Price: Products priced above overall average.
+      (f) Category Inventory Count: Total products per category.
+      (g) High-Value Categories: Categories with avg price > 5,000.
+      (h) Warehouse Logistics: name, location, storage_capacity.
+      (i) Pending Orders: customer_name and order_date for pending orders.
+      (j) Customer Revenue: Total purchase amount spent per customer.
+
+[x] 5.2 Standalone SQL Queries Script Export (`queries.sql`)
+    - Created queries.sql containing pure SQL scripts for all 10 analytical queries.
+
+================================================================================
+PHASE 6: DATABASE TRIGGERS BENCH (Task-2, Triggers a to c)
+================================================================================
+[x] 6.1 Trigger 1: Stock Availability Validation Tester
+    - Check product stock availability before inserting order detail. Block order if quantity exceeds stock.
+
+[x] 6.2 Trigger 2: Automated Payment Calculation Tester
+    - Calculate Final_Amount = Total_Amount + Tax - Discount automatically before inserting/updating payment.
+
+[x] 6.3 Trigger 3: Order Deletion Audit Log Tester
+    - Store deleted order information (ID, timestamp, details) in ORDER_LOG table upon order deletion.
+
+================================================================================
+PHASE 7: ACADEMIC LAB REPORT & THEORY VERIFICATION (Tasks 1, 3, 4, 5)
+================================================================================
+[x] 7.1 Task-1: ER Diagram & Relational Schema Verification
+    - Interactive viewer for Crow's Foot ER Diagram.
+    - Relational data dictionary table showing entities, attributes, primary keys, and foreign keys.
+
+[x] 7.2 Task-3: RAID Level 4 Recovery Calculator
+    - Interactive XOR Parity & Disk Recovery tool.
+    - Data Blocks: D1 (1010), D2 (1100), D3 (0111), D4 (1001), D5 (0011), D6 (1110).
+    - Parity equation P = D1 ⊕ D2 ⊕ D3 ⊕ D4 ⊕ D5 ⊕ D6 = 0101.
+    - Interactive recovery simulation when D5 fails: D5 = D1 ⊕ D2 ⊕ D3 ⊕ D4 ⊕ D6 ⊕ P = 0011.
+
+[x] 7.3 Task-4: Database Normalization Viewer
+    - Step-by-step conversion of unnormalized table (P001 to P006).
+    - Interactive views for 1NF (atomic values), 2NF (removal of partial dependencies), and 3NF (removal of transitive dependencies).
+
+[x] 7.4 Task-5: B+ Tree Indexing & Search/Delete Visualizer
+    - Interactive visualizer for Order-3 B+ Tree with key insertion sequence: 110, 104, 101, 113, 107, 109, 102, 111, 105, 108, 103, 112, 106.
+    - Search path simulation for Product_ID = 108.
+    - Deletion simulation for Product_ID = 105 with node rebalancing explanation.
+
+================================================================================
+PHASE 8: TESTING, FINAL CHECKS & DEPLOYMENT
+================================================================================
+[x] 8.1 System Integration & UI Verification
+    - Verify all responsive breakpoints on mobile, tablet, and desktop.
+    - Run full test suite across all phases (100% passing).
+    - Run 'python3 manage.py check' with zero configuration errors.
+
+================================================================================
+PHASE 9: CLOUDINARY MEDIA & IMAGE MANAGEMENT (Cloud Storage Workflow)
+================================================================================
+[x] 9.1 Environment & Cloudinary SDK Configuration
+    - Add `cloudinary>=1.36.0` dependency to `requirements.txt`.
+    - Configure `CLOUDINARY_URL` variable in `.env.example` and `settings.py`.
+    - Configure media static fallback routes in `urls.py`.
+
+[x] 9.2 Product Model & Image Field Extension (`store/models.py`)
+    - Add `image_url` field to `Product` model.
+    - Implement `get_image_url()` fallback helper method for category-based default placeholders.
+
+[x] 9.3 Cloudinary Utilities & Deferred Upload Protocol (`store/cloudinary_utils.py`)
+    - Create `upload_product_image_to_cloudinary()` helper function.
+    - Implement **Deferred Upload Protocol**: Strictly process and upload image files to Cloudinary ONLY AFTER product creation/modification form data passes full validation and confirmation.
+    - Prevent unwanted, draft, or incomplete image uploads in cloud storage.
+
+[x] 9.4 Responsive Frontend Image Controls & Live Preview (`templates/products/product_form.html`)
+    - Add `enctype="multipart/form-data"` attribute to product forms.
+    - Implement file input field (`product_image`) and Cloudinary URL field (`image_url`).
+    - Add instant client-side preview box using `URL.createObjectURL(file)` to display selected images before submit.
+
+[x] 9.5 UI Integration Across Catalog Cards & Data Tables
+    - Render Cloudinary CDN product images on homepage product grid cards (`product_card.html`).
+    - Render image thumbnails and Cloudinary badges in CRUD data tables (`product_list.html`).
+    - Display product photos in detail modals.
+================================================================================
+
+================================================================================
+PHASE 10: RAILWAY HOSTING PREPARATION & DEPLOYMENT HARDENING
+================================================================================
+[x] 10.1 Zero React Confirmation & Codebase Cleansing
+    - Removed all extraneous React/Vite/TypeScript configurations and packages.
+    - Preserved pure, clean Django 5.2 + Bootstrap 5 + PostgreSQL architecture.
+
+[x] 10.2 Railway Deployment Configuration Files
+    - Created `Procfile` for standard Gunicorn WSGI process binding to dynamic `$PORT`.
+    - Created `railway.json` with Nixpacks build config and healthcheck definitions.
+    - Created `nixpacks.toml` specifying Python 3.11, PostgreSQL client, static collection, and automatic migrations.
+    - Created `runtime.txt` pinning `python-3.11.9`.
+    - Added `*.railway.app` and `*.up.railway.app` to Django's `CSRF_TRUSTED_ORIGINS`.
+
+[x] 10.3 Database & Static Files Hardening
+    - Configured `dj_database_url` to support Railway PostgreSQL connection string (`DATABASE_URL`).
+    - Configured `WhiteNoise` for zero-overhead production static file serving.
+    - Multi-worker Gunicorn server in `server.py` with automatic startup migration checks.
+================================================================================
+
+

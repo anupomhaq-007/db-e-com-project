@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In | E-Commerce Database Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                        <i class="bi bi-lock-fill fs-4"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">User Sign In</h4>
+                    <p class="text-secondary small mb-0">CSE 303 Lab E-Commerce Database System</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mb-4" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        {% if next_url %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                        {% endif %}
+
+                        <div class="form-floating mb-3">
+                            <input type="text" name="username" class="form-control" id="floatingUsername" placeholder="Username" value="{{ username|default:'' }}" required autofocus>
+                            <label for="floatingUsername"><i class="bi bi-person me-1"></i> Username</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password" required>
+                            <label for="floatingPassword"><i class="bi bi-key me-1"></i> Password</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+                                <label class="form-check-label text-muted small" for="rememberMe">
+                                    Remember session
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-bold fs-6">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Fast Superuser / Seed Credentials Tip with 1-Click Fill -->
+                    <div class="bg-light p-3 rounded-3 border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-bold"><i class="bi bi-lightbulb-fill text-warning me-1"></i> Quick Test Sign-In Accounts:</small>
+                        </div>
+                        
+                        <!-- Admin Superuser Option -->
+                        <div class="p-2 bg-white rounded border mb-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-danger">Staff Admin</span>
+                                <small class="text-dark font-monospace d-block mt-1"><strong>admin</strong> / <strong>admin123</strong></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold" onclick="quickFill('admin', 'admin123')">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Use Admin
+                            </button>
+                        </div>
+
+                        <!-- Customer Option -->
+                        <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info text-dark">Customer Account</span>
+                                <small class="text-dark font-monospace d-block mt-1"><strong>arman</strong> / <strong>arman123</strong></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-info fw-bold text-dark" onclick="quickFill('arman', 'arman123')">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Use Customer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center border-top pt-3">
+                        <p class="text-muted small mb-0">Don't have a Customer account?</p>
+                        <a href="{% url 'register' %}" class="fw-bold text-primary text-decoration-none">Create a new Customer Profile & User</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function quickFill(user, pass) {
+    var u = document.getElementById('floatingUsername');
+    var p = document.getElementById('floatingPassword');
+    if (u) u.value = user;
+    if (p) p.value = pass;
+    // Auto-submit after small visual feedback
+    var form = u.closest('form');
+    if (form) form.submit();
+}
+</script>
+{% endblock %}

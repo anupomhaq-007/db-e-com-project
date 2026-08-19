@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Header Slider Management | Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between pb-3 mb-4 border-bottom">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Header Slider Manager</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="bi bi-images text-primary me-2"></i>Header Slider Content Manager
+            </h2>
+            <p class="text-muted small mb-0">
+                Add, modify, reorder, or toggle carousel slides with uploaded product photos and custom themes.
+            </p>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a href="{% url 'admin_slider_create' %}" class="btn btn-primary fw-bold px-3">
+                <i class="bi bi-plus-circle me-1"></i> Add New Slide
+            </a>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i> Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mb-4 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Slides List Table / Grid -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2"></i>Current Header Slides ({{ slides|length }})</h5>
+            <a href="{% url 'home' %}" target="_blank" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-box-arrow-up-right me-1"></i> View Live Carousel
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60px;" class="ps-4">Order</th>
+                            <th style="width: 120px;">Image Preview</th>
+                            <th>Slide Details</th>
+                            <th>Badge & Buttons</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slide in slides %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-center">
+                                <span class="badge bg-secondary rounded-pill px-3 py-2 fs-6">#{{ slide.display_order }}</span>
+                            </td>
+                            <td>
+                                {% if slide.get_image_url %}
+                                <div class="position-relative d-inline-block">
+                                    <img src="{{ slide.get_image_url }}" alt="{{ slide.title }}" 
+                                         class="rounded-3 shadow-sm border p-1 bg-white" 
+                                         style="width: 90px; height: 60px; object-fit: cover;">
+                                </div>
+                                {% else %}
+                                <div class="rounded-3 bg-light border text-center p-2 text-muted small" style="width: 90px; height: 60px;">
+                                    <i class="bi bi-image fs-4 d-block opacity-50"></i>
+                                    No Image
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="d-block text-dark fs-6">{{ slide.title }}</strong>
+                                {% if slide.subtitle %}
+                                <small class="text-muted d-block text-truncate" style="max-width: 320px;">
+                                    {{ slide.subtitle }}
+                                </small>
+                                {% endif %}
+                                {% if slide.product %}
+                                <span class="badge bg-light text-dark border me-1 mt-1">
+                                    <i class="bi bi-box-seam me-1"></i>Linked: {{ slide.product.name }} (${{ slide.product.price }})
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if slide.badge_text %}
+                                <span class="badge bg-{{ slide.badge_color|default:'primary' }} mb-1 d-inline-block">
+                                    {{ slide.badge_text }}
+                                </span>
+                                {% endif %}
+                                <div class="small text-muted">
+                                    {% if slide.button_text %}
+                                    <i class="bi bi-link-45deg me-1"></i><strong>{{ slide.button_text }}</strong> ({{ slide.button_url }})
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <form method="POST" action="{% url 'admin_slider_toggle' slide.slide_id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    {% if slide.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Active
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold">
+                                        <i class="bi bi-x-circle me-1"></i> Disabled
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'admin_slider_update' slide.slide_id %}" class="btn btn-outline-primary" title="Edit Slide">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSlideModal{{ slide.slide_id }}" title="Delete Slide">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                    </button>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade text-start" id="deleteSlideModal{{ slide.slide_id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Header Slide</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="mb-2">Are you sure you want to permanently delete this header slide?</p>
+                                                <div class="p-3 bg-light rounded-3 border">
+                                                    <strong>"{{ slide.title }}"</strong>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="POST" action="{% url 'admin_slider_delete' slide.slide_id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm fw-bold">Confirm Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-images display-3 d-block opacity-25 mb-3"></i>
+                                <h5>No Header Slides Found</h5>
+                                <p class="small mb-3">Create your first carousel header slide to showcase promotions, products, or course features.</p>
+                                <a href="{% url 'admin_slider_create' %}" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold">
+                                    <i class="bi bi-plus-lg me-1"></i> Create Header Slide
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

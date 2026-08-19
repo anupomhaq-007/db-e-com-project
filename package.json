@@ -1,0 +1,12 @@
+{
+  "name": "e-commerce-database-system",
+  "private": true,
+  "version": "1.0.0",
+  "description": "E-Commerce Database Management System (Django 5.2 + PostgreSQL + Bootstrap 5)",
+  "scripts": {
+    "dev": "python3 server.py --port 3000 --host 0.0.0.0",
+    "start": "python3 server.py",
+    "build": "python3 -m pip install --break-system-packages -r requirements.txt && python3 manage.py migrate && python3 manage.py collectstatic --noinput",
+    "lint": "python3 manage.py check"
+  }
+}

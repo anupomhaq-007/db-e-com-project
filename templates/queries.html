@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytical SQL Queries Center (Task-2 Queries a-j) | CSE 303 Lab{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small text-uppercase fw-semibold">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Analytical SQL Queries (Task-2)</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-0">
+                <i class="bi bi-code-square text-primary me-2"></i>Analytical SQL Queries Center
+            </h2>
+            <p class="text-muted small mb-0">
+                Execute mandatory faculty SQL queries (Task-2: Queries a to j) directly against Neon PostgreSQL
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-dark text-white px-3 py-2 font-monospace fs-6 shadow-sm">
+                <i class="bi bi-database-check text-success me-1"></i> Neon PostgreSQL 18.4
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Navigation: Query Selector (a to j + Custom) -->
+        <div class="col-12 col-lg-4 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-dark text-white py-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-list-check text-warning me-2"></i>Mandatory Queries (a - j)
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush" id="queryNavList">
+                    {% for q_key, q_data in query_catalog.items %}
+                    <a href="?query={{ q_key }}" 
+                       class="list-group-item list-group-item-action py-3 px-3 d-flex align-items-center justify-content-between {% if selected_query_key == q_key %}active fw-bold border-start border-4 border-primary{% endif %}">
+                        <div class="me-2 text-truncate">
+                            <span class="d-block text-truncate small mb-1">{{ q_data.title }}</span>
+                            <small class="{% if selected_query_key == q_key %}text-light{% else %}text-muted{% endif %} d-block text-truncate" style="font-size: 0.72rem;">
+                                {{ q_data.description }}
+                            </small>
+                        </div>
+                        <span class="badge {% if selected_query_key == q_key %}bg-white text-primary{% else %}bg-secondary-subtle text-secondary{% endif %} font-monospace">
+                            {{ q_key|upper }}
+                        </span>
+                    </a>
+                    {% endfor %}
+
+                    <!-- Custom SQL Console Link -->
+                    <a href="?query=custom" 
+                       class="list-group-item list-group-item-action py-3 px-3 d-flex align-items-center justify-content-between bg-light-subtle {% if selected_query_key == 'custom' %}active fw-bold border-start border-4 border-warning{% endif %}">
+                        <div>
+                            <span class="d-block text-truncate small fw-semibold text-warning-emphasis">
+                                <i class="bi bi-terminal-fill me-1 text-warning"></i> Custom Ad-Hoc SQL Runner
+                            </span>
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">Execute custom SELECT queries</small>
+                        </div>
+                        <span class="badge bg-warning text-dark font-monospace">SQL</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area: SQL Code Editor & Query Results -->
+        <div class="col-12 col-lg-8 col-xl-9">
+            <!-- Query Details & SQL Viewer Card -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <span class="badge bg-primary text-white font-monospace uppercase mb-1">
+                            Task-2 Query ({{ current_query.id|upper }})
+                        </span>
+                        <h4 class="fw-bold text-dark mb-1">{{ current_query.title }}</h4>
+                        <p class="text-muted small mb-0">{{ current_query.description }}</p>
+                    </div>
+                    {% if selected_query_key != 'custom' %}
+                    <form method="GET" action="{% url 'queries' %}" class="d-inline">
+                        <input type="hidden" name="query" value="{{ selected_query_key }}">
+                        <button type="submit" class="btn btn-success fw-bold btn-sm shadow-sm">
+                            <i class="bi bi-play-fill fs-5 align-middle"></i> Re-Run Query
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <div class="card-body p-3 p-md-4 bg-light">
+                    <label class="form-label small fw-bold text-dark text-uppercase font-monospace mb-2">
+                        <i class="bi bi-code-slash text-primary me-1"></i> Executed PostgreSQL Query String:
+                    </label>
+
+                    {% if selected_query_key == 'custom' %}
+                    <form method="POST" action="{% url 'queries' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="query" value="custom">
+                        <div class="mb-3">
+                            <textarea name="custom_sql" class="form-control font-monospace text-bg-dark p-3 rounded-3" rows="5" style="font-size: 0.9rem;" placeholder="SELECT * FROM store_product WHERE price > 1000;">{{ current_sql }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-warning fw-bold px-4">
+                                <i class="bi bi-terminal me-1"></i> Execute Custom SQL
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="position-relative">
+                        <pre class="bg-dark text-white p-3 rounded-3 font-monospace mb-0 overflow-x-auto" style="font-size: 0.9rem; line-height: 1.5; border-left: 4px solid #0d6efd;"><code>{{ current_sql }}</code></pre>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Query Execution Results Table -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-table text-primary me-2"></i>Query Output Data Table
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if query_error %}
+                            <span class="badge bg-danger">Execution Error</span>
+                        {% else %}
+                            <span class="badge bg-success font-monospace">{{ row_count }} rows returned</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    {% if query_error %}
+                    <div class="alert alert-danger m-4 rounded-3 p-4">
+                        <h5 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>PostgreSQL Execution Error</h5>
+                        <p class="font-monospace small mb-0">{{ query_error }}</p>
+                    </div>
+                    {% else %}
+
+                    {% if rows %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0">
+                            <thead class="table-light text-uppercase small font-monospace">
+                                <tr>
+                                    <th style="width: 50px;" class="text-center">#</th>
+                                    {% for col in columns %}
+                                    <th class="fw-bold text-dark">{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                <tr>
+                                    <td class="text-center font-monospace text-muted small">{{ forloop.counter }}</td>
+                                    {% for val in row %}
+                                    <td>
+                                        {% if val is None %}
+                                            <span class="badge bg-light text-muted border">NULL</span>
+                                        {% else %}
+                                            <span class="font-monospace text-dark">{{ val }}</span>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-search display-4 text-muted opacity-50 mb-3 d-block"></i>
+                        <h5 class="fw-bold">No Records Returned</h5>
+                        <p class="text-muted small">Query executed successfully, but returned 0 rows.</p>
+                    </div>
+                    {% endif %}
+
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

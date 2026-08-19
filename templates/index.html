@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block title %}Catalog | E-Commerce Database Portal - CSE 303 Lab{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Component 2: Hero Carousel Slider -->
+    {% include 'components/hero_slider.html' %}
+
+    <!-- Catalog Section Anchor & Dropdown Options -->
+    <div id="catalog-section" class="pt-2 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border border-light-subtle mb-4">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <!-- Left Title -->
+                <div>
+                    <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-grid-3x3-gap-fill text-primary"></i> Product Catalog Inventory
+                    </h3>
+                    <p class="text-muted small mb-0">
+                        Displaying core database inventory stored in Neon PostgreSQL
+                    </p>
+                </div>
+
+                <!-- Right Controls: Product Catalog Options Dropdown Menus -->
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Main Product Catalog Options Dropdown Menu -->
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle fw-bold px-3 py-2 rounded-3 shadow-sm d-flex align-items-center gap-2" 
+                                type="button" id="catalogOptionsMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sliders2-vertical"></i> Product Catalog Options
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-3" style="min-width: 290px;" aria-labelledby="catalogOptionsMenuBtn">
+                            <li><h6 class="dropdown-header text-uppercase text-primary fw-bold small ps-0"><i class="bi bi-tags me-1"></i> Filter By Category</h6></li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if not selected_category %}active fw-bold{% endif %}" href="{% url 'home' %}?sort={{ sort_by }}&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-grid me-2"></i> All Categories
+                                </a>
+                            </li>
+                            {% for cat in categories %}
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if selected_category == cat.category_id|stringformat:'s' %}active fw-bold{% endif %}" href="?category={{ cat.category_id }}&sort={{ sort_by }}&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-tag-fill me-2 text-primary"></i> {{ cat.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+
+                            <li><hr class="dropdown-divider my-2"></li>
+
+                            <li><h6 class="dropdown-header text-uppercase text-primary fw-bold small ps-0"><i class="bi bi-sort-down me-1"></i> Sort Catalog</h6></li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if sort_by == 'id' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=id&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-hash me-2"></i> Product ID (Default)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if sort_by == 'price_asc' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=price_asc&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-sort-numeric-down me-2"></i> Price: Low to High
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if sort_by == 'price_desc' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=price_desc&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-sort-numeric-down-alt me-2"></i> Price: High to Low
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if sort_by == 'name' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=name&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-sort-alpha-down me-2"></i> Product Name (A-Z)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if sort_by == 'stock' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=stock&stock={{ stock_status }}#catalog-section">
+                                    <i class="bi bi-box-seam me-2"></i> Stock Level
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider my-2"></li>
+
+                            <li><h6 class="dropdown-header text-uppercase text-primary fw-bold small ps-0"><i class="bi bi-boxes me-1"></i> Stock Status</h6></li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if not stock_status %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort={{ sort_by }}&stock=#catalog-section">
+                                    All Inventory
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if stock_status == 'in_stock' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort={{ sort_by }}&stock=in_stock#catalog-section">
+                                    In Stock Only
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 {% if stock_status == 'low_stock' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort={{ sort_by }}&stock=low_stock#catalog-section">
+                                    Low Stock Alert (≤ 10)
+                                </a>
+                            </li>
+
+                            {% if selected_category or sort_by != 'id' or stock_status or search_query %}
+                            <li><hr class="dropdown-divider my-2"></li>
+                            <li>
+                                <a class="dropdown-item text-danger fw-bold rounded-2 py-2" href="{% url 'home' %}#catalog-section">
+                                    <i class="bi bi-x-circle me-2"></i> Reset All Filters
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Category Selection Dropdown Menu -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle py-2 px-3 rounded-3 fw-semibold text-dark" type="button" id="categoryDropdownNav" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-grid-fill text-primary me-1"></i>
+                            {% if active_category_name %}{{ active_category_name }}{% else %}All Categories{% endif %}
+                        </button>
+                        <ul class="dropdown-menu shadow border-0 rounded-3" aria-labelledby="categoryDropdownNav">
+                            <li><a class="dropdown-item {% if not selected_category %}active fw-bold{% endif %}" href="?sort={{ sort_by }}&stock={{ stock_status }}#catalog-section">All Categories</a></li>
+                            {% for cat in categories %}
+                            <li><a class="dropdown-item {% if selected_category == cat.category_id|stringformat:'s' %}active fw-bold{% endif %}" href="?category={{ cat.category_id }}&sort={{ sort_by }}&stock={{ stock_status }}#catalog-section">{{ cat.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Sort By Selection Dropdown Menu -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle py-2 px-3 rounded-3 fw-semibold text-dark" type="button" id="sortDropdownNav" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sort-down text-primary me-1"></i> Sort By
+                        </button>
+                        <ul class="dropdown-menu shadow border-0 rounded-3" aria-labelledby="sortDropdownNav">
+                            <li><a class="dropdown-item {% if sort_by == 'id' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=id&stock={{ stock_status }}#catalog-section">Default (ID)</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'price_asc' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=price_asc&stock={{ stock_status }}#catalog-section">Price: Low to High</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'price_desc' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=price_desc&stock={{ stock_status }}#catalog-section">Price: High to Low</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'name' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=name&stock={{ stock_status }}#catalog-section">Name A-Z</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'stock' %}active fw-bold{% endif %}" href="?category={{ selected_category }}&sort=stock&stock={{ stock_status }}#catalog-section">Stock Level</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Search Input -->
+                    <form method="GET" action="{% url 'home' %}#catalog-section" class="d-flex align-items-center">
+                        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                        {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+                        {% if stock_status %}<input type="hidden" name="stock" value="{{ stock_status }}">{% endif %}
+                        <div class="input-group">
+                            <input type="text" name="q" value="{{ search_query }}" class="form-control rounded-start-3" placeholder="Search catalog..." style="min-width: 140px;">
+                            <button class="btn btn-primary rounded-end-3" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Active Status Bar -->
+        {% if search_query or selected_category or sort_by != 'id' or stock_status %}
+        <div class="alert alert-light border d-flex justify-content-between align-items-center rounded-3 mb-4 shadow-sm py-2">
+            <span class="small">
+                <i class="bi bi-funnel-fill text-primary me-1"></i>
+                Active Filters: 
+                {% if active_category_name %}<span class="badge bg-primary me-1">Category: {{ active_category_name }}</span>{% endif %}
+                {% if sort_by != 'id' %}<span class="badge bg-secondary me-1">Sort: {{ sort_by }}</span>{% endif %}
+                {% if stock_status %}<span class="badge bg-info text-dark me-1">Stock: {{ stock_status }}</span>{% endif %}
+                {% if search_query %}<span class="badge bg-dark me-1">Query: "{{ search_query }}"</span>{% endif %}
+            </span>
+            <a href="{% url 'home' %}#catalog-section" class="btn btn-sm btn-outline-danger py-1">
+                <i class="bi bi-x-circle me-1"></i> Clear Filters
+            </a>
+        </div>
+        {% endif %}
+
+
+        <!-- Component 3: Product Placeholder Grid -->
+        {% if products %}
+        <div class="row g-4">
+            {% for product in products %}
+                {% include 'components/product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm text-center p-5 my-4">
+            <div class="card-body">
+                <i class="bi bi-inbox display-1 text-muted opacity-50 mb-3"></i>
+                <h4 class="fw-bold">No Products Found</h4>
+                <p class="text-muted">No inventory matches your search criteria or category filter.</p>
+                <a href="{% url 'home' %}" class="btn btn-primary btn-sm rounded-pill px-4">Reset Catalog</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Section Anchor: CRUD Management Preview -->
+    <div id="crud-section" class="pt-5 mt-4">
+        <div class="card border-primary border-2 shadow-sm rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2"></i>Product CRUD Management Center</h5>
+                <span class="badge bg-white text-primary fw-semibold">Phase 4 Ready</span>
+            </div>
+            <div class="card-body p-4 text-center">
+                <p class="text-muted mb-3">Create, update, search, and delete database entries with full foreign key constraints and transaction logs.</p>
+                <button class="btn btn-outline-primary btn-sm fw-semibold me-2" disabled><i class="bi bi-plus-circle me-1"></i> Add New Product (Product ID > 113)</button>
+                <a href="#catalog-section" class="btn btn-primary btn-sm fw-semibold"><i class="bi bi-eye me-1"></i> View Live Table</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Anchor: SQL Queries Preview -->
+    <div id="queries-section" class="pt-4">
+        <div class="card border-0 shadow-sm rounded-4 mb-5 bg-dark text-white p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="bi bi-code-square text-warning me-2"></i>Analytical SQL Query Engine</h5>
+                <span class="badge bg-warning text-dark fw-bold">10 Faculty Queries (a - j)</span>
+            </div>
+            <p class="text-secondary small mb-0">Prepared queries for customer search, above-average price calculations, category counts, pending order lists, and customer revenue breakdown.</p>
+        </div>
+    </div>
+
+    <!-- Section Anchor: Triggers Preview -->
+    <div id="triggers-section" class="pt-4">
+        <div class="card border-0 shadow-sm rounded-4 mb-5 bg-light p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-lightning-charge-fill text-danger me-2"></i>Automated Database Triggers</h5>
+                <span class="badge bg-danger text-white fw-bold">Triggers (a - c)</span>
+            </div>
+            <p class="text-muted small mb-0">Real-time stock validation, automated tax & discount payment calculator, and ORDER_LOG audit trail on order deletion.</p>
+        </div>
+    </div>
+
+    <!-- Section Anchor: Lab Report Preview -->
+    <div id="report-section" class="pt-4">
+        <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 border-start border-4 border-info">
+            <h5 class="fw-bold text-dark mb-2"><i class="bi bi-journal-text text-info me-2"></i>Academic Lab Report & Diagrams</h5>
+            <p class="text-muted small mb-0">Complete Crow's foot ER Diagram, 1NF/2NF/3NF Normalization steps, RAID-4 Parity Recovery calculator, and Order-3 B+ Tree Visualizer.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Cart Modal Placeholder -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="cartModalLabel"><i class="bi bi-cart3 me-2"></i>Shopping Order Placeholder</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItemsList" class="mb-3">
+                    <p class="text-muted text-center my-3" id="emptyCartMsg">Your shopping cart is currently empty.</p>
+                </div>
+                <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
+                    <span>Total Estimated:</span>
+                    <span class="text-primary" id="cartTotalAmount">$0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="alert('Order Placement Trigger will process this in Phase 6!')">
+                    <i class="bi bi-check-circle me-1"></i> Proceed to Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container for Notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="actionToast" class="toast align-items-center text-bg-dark border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                <span id="toastMessage">Product added to order cart!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let cart = [];
+
+    function addToCart(productId, productName, productPrice) {
+        cart.push({ id: productId, name: productName, price: productPrice });
+        updateCartUI();
+        
+        // Show Toast Notification
+        const toastEl = document.getElementById('actionToast');
+        document.getElementById('toastMessage').innerText = `'${productName}' added to cart!`;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    function updateCartUI() {
+        document.getElementById('cartCountBadge').innerText = cart.length;
+        const cartList = document.getElementById('cartItemsList');
+        const emptyMsg = document.getElementById('emptyCartMsg');
+        
+        if (cart.length === 0) {
+            emptyMsg.style.display = 'block';
+            document.getElementById('cartTotalAmount').innerText = '$0.00';
+            return;
+        }
+        
+        emptyMsg.style.display = 'none';
+        let html = '<ul class="list-group list-group-flush">';
+        let total = 0;
+        cart.forEach((item, index) => {
+            total += parseFloat(item.price);
+            html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                        <strong class="d-block">${item.name}</strong>
+                        <small class="text-muted">Product ID: ${item.id}</small>
+                    </div>
+                    <span class="fw-bold text-primary">$${parseFloat(item.price).toFixed(2)}</span>
+                </li>
+            `;
+        });
+        html += '</ul>';
+        cartList.innerHTML = html;
+        document.getElementById('cartTotalAmount').innerText = `$${total.toFixed(2)}`;
+    }
+</script>
+{% endblock %}
