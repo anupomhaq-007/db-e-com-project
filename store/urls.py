@@ -19,6 +19,8 @@ urlpatterns = [
     path('dashboard/admin/permissions/update/', views.admin_user_permissions_update_view, name='admin_user_permissions_update'),
     path('dashboard/user/', views.user_dashboard_view, name='user_dashboard'),
 
+    path('orders/place/', views.place_order_view, name='place_order'),
+    path('checkout/', views.place_order_view, name='checkout'),
     path('orders/<int:order_id>/update-status/', views.order_update_status_view, name='order_update_status'),
     path('products/<int:pk>/quick-stock/', views.product_quick_stock_view, name='product_quick_stock'),
 

@@ -1,7 +1,9 @@
 import os
+import json
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Q, Max, Sum, Count
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group, Permission
@@ -929,6 +931,212 @@ def user_dashboard_view(request):
         'orders_count': orders_count,
     }
     return render(request, 'dashboard/user_dashboard.html', context)
+
+
+def place_order_view(request):
+    """
+    Handles Cart Checkout and Direct Product Order Placement.
+    Supports both JSON AJAX payloads and standard Form POST submissions.
+    Enforces Trigger 1 (Stock Validation), Trigger 2 (Payment Calculation), and ACID transactions.
+    """
+    if request.method != 'POST':
+        return redirect('home')
+
+    is_json = request.content_type == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if request.content_type == 'application/json':
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f"Invalid JSON payload: {str(e)}"}, status=400)
+    else:
+        payload = request.POST
+
+    # Extract items list
+    items = []
+    if isinstance(payload, dict) and 'items' in payload:
+        raw_items = payload.get('items', [])
+        for it in raw_items:
+            try:
+                p_id = int(it.get('product_id') or it.get('id'))
+                qty = int(it.get('quantity') or 1)
+                if qty > 0:
+                    items.append({'product_id': p_id, 'quantity': qty})
+            except (ValueError, TypeError):
+                continue
+    else:
+        # Form post: single product or serialized cart
+        cart_data = payload.get('cart_json')
+        if cart_data:
+            try:
+                raw_items = json.loads(cart_data)
+                for it in raw_items:
+                    p_id = int(it.get('product_id') or it.get('id'))
+                    qty = int(it.get('quantity') or 1)
+                    if qty > 0:
+                        items.append({'product_id': p_id, 'quantity': qty})
+            except Exception:
+                pass
+        
+        # Fallback to single product form parameters (e.g. quick buy)
+        if not items and payload.get('product_id'):
+            try:
+                p_id = int(payload.get('product_id'))
+                qty = int(payload.get('quantity', 1))
+                if qty > 0:
+                    items.append({'product_id': p_id, 'quantity': qty})
+            except (ValueError, TypeError):
+                pass
+
+    if not items:
+        if is_json:
+            return JsonResponse({'success': False, 'message': 'Your shopping cart is empty.'}, status=400)
+        messages.error(request, 'Your shopping cart is empty.')
+        return redirect('home')
+
+    # Resolve customer profile
+    shipping_address = payload.get('shipping_address', '').strip()
+    payment_method = payload.get('payment_method', 'Cash on Delivery').strip() or 'Cash on Delivery'
+    
+    customer = None
+    if request.user.is_authenticated:
+        customer = Customer.objects.filter(user=request.user).first()
+        if not customer:
+            customer = Customer.objects.filter(email=request.user.email).first()
+            if customer and not customer.user:
+                customer.user = request.user
+                customer.save()
+            elif not customer:
+                customer = Customer.objects.create(
+                    user=request.user,
+                    full_name=request.user.get_full_name() or request.user.username,
+                    email=request.user.email or f"{request.user.username}@example.com",
+                    address=shipping_address or "Dhaka, Bangladesh",
+                    membership_level='Regular'
+                )
+    else:
+        # Guest customer resolution
+        guest_email = payload.get('email', '').strip() or 'guest@example.com'
+        guest_name = payload.get('full_name', '').strip() or 'Guest Customer'
+        guest_phone = payload.get('phone', '').strip() or '+8801700000000'
+        
+        customer = Customer.objects.filter(email=guest_email).first()
+        if not customer:
+            customer = Customer.objects.create(
+                full_name=guest_name,
+                email=guest_email,
+                phone=guest_phone,
+                address=shipping_address or "Dhaka, Bangladesh",
+                membership_level='Regular'
+            )
+
+    if not shipping_address:
+        shipping_address = customer.address or "Dhaka, Bangladesh"
+
+    # Transactional Order Creation
+    try:
+        with transaction.atomic():
+            # 1. Pre-validate stock for each item
+            products_to_order = []
+            total_amount = 0.00
+            for item in items:
+                try:
+                    product = Product.objects.select_for_update().get(product_id=item['product_id'])
+                except Product.DoesNotExist:
+                    raise ValidationError(f"Product ID #{item['product_id']} not found in catalog.")
+                
+                req_qty = item['quantity']
+                if req_qty > product.stock_quantity:
+                    raise ValidationError(
+                        f"Insufficient stock for '{product.name}'. "
+                        f"Requested {req_qty} units, but only {product.stock_quantity} available in database."
+                    )
+                
+                item_subtotal = float(product.price) * req_qty
+                total_amount += item_subtotal
+                products_to_order.append({
+                    'product': product,
+                    'quantity': req_qty,
+                    'unit_price': product.price,
+                    'subtotal': item_subtotal
+                })
+
+            # 2. Create Order
+            order = Order.objects.create(
+                customer=customer,
+                shipping_address=shipping_address,
+                total_amount=total_amount,
+                order_status='Pending'
+            )
+
+            # 3. Create OrderDetails & Deduct Inventory Stock
+            for po in products_to_order:
+                prod = po['product']
+                qty = po['quantity']
+                OrderDetail.objects.create(
+                    order=order,
+                    product=prod,
+                    quantity=qty,
+                    unit_price=po['unit_price'],
+                    subtotal=po['subtotal']
+                )
+                prod.stock_quantity = max(0, prod.stock_quantity - qty)
+                if prod.stock_quantity == 0:
+                    prod.availability_status = "Out of Stock"
+                prod.save()
+
+            # 4. Trigger 2: Calculate Payment (Tax & Membership Discount)
+            membership = (customer.membership_level or 'Regular').lower()
+            discount_rates = {
+                'platinum': 0.15,
+                'gold': 0.10,
+                'silver': 0.05,
+                'regular': 0.00
+            }
+            discount_rate = discount_rates.get(membership, 0.00)
+            tax_rate = 0.05  # 5% standard VAT
+
+            tax = round(total_amount * tax_rate, 2)
+            discount = round(total_amount * discount_rate, 2)
+            payment_status = 'Pending' if payment_method.lower() in ('cash on delivery', 'cod') else 'Completed'
+
+            payment = Payment.objects.create(
+                order=order,
+                amount=total_amount,
+                tax=tax,
+                discount=discount,
+                payment_method=payment_method,
+                payment_status=payment_status
+            )
+
+        success_msg = f"Order #{order.order_id} placed successfully! Total Paid: ${payment.final_amount:.2f}"
+        if is_json:
+            return JsonResponse({
+                'success': True,
+                'order_id': order.order_id,
+                'total_amount': float(total_amount),
+                'tax': float(tax),
+                'discount': float(discount),
+                'final_amount': float(payment.final_amount),
+                'order_status': order.order_status,
+                'message': success_msg
+            })
+        
+        messages.success(request, success_msg)
+        if request.user.is_authenticated:
+            return redirect('user_dashboard')
+        return redirect('home')
+
+    except ValidationError as ve:
+        err_msg = str(ve.messages[0]) if hasattr(ve, 'messages') else str(ve)
+        if is_json:
+            return JsonResponse({'success': False, 'message': err_msg}, status=400)
+        messages.error(request, f"Order Placement Failed: {err_msg}")
+        return redirect('home')
+    except Exception as e:
+        if is_json:
+            return JsonResponse({'success': False, 'message': f"Order Failed: {str(e)}"}, status=500)
+        messages.error(request, f"Unexpected error during order creation: {str(e)}")
+        return redirect('home')
 
 
 @csrf_exempt

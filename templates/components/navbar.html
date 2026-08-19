@@ -32,18 +32,16 @@
                 </div>
             </form>
 
-            <!-- Right Side: Cart (Logged In Only) & Auth User Menu -->
+            <!-- Right Side: Cart & Auth User Menu -->
             <div class="d-flex align-items-center gap-1 gap-sm-2">
-                <!-- Cart Button: APPEARS ONLY WHEN USER IS LOGGED IN -->
-                {% if user.is_authenticated %}
+                <!-- Cart Button: Accessible for both guests and authenticated users -->
                 <button class="btn btn-outline-warning btn-sm position-relative d-flex align-items-center gap-1 gap-sm-2 rounded-pill px-2 px-sm-3 py-1 shadow-sm" type="button" data-bs-toggle="modal" data-bs-target="#cartModal" title="Shopping Cart">
                     <i class="bi bi-cart3 fs-6"></i>
                     <span class="d-none d-sm-inline fw-semibold">Cart</span>
                     <span class="badge rounded-pill bg-danger shadow-sm" id="cartCountBadge">
-                        {{ cart_count|default:0 }}
+                        0
                     </span>
                 </button>
-                {% endif %}
 
                 <!-- Auth User Profile / Login Buttons -->
                 {% if user.is_authenticated %}
@@ -223,6 +221,14 @@
                 <!-- GUEST MENU -->
                 <div class="text-uppercase text-white-50 fw-bold small mb-2 px-2" style="letter-spacing: 1px; font-size: 0.7rem;">Account Access</div>
                 <div class="list-group list-group-flush mb-4">
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent text-white border-0 rounded-3 py-2 px-3 mb-1 d-flex align-items-center justify-content-between" data-bs-toggle="modal" data-bs-target="#cartModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-cart3 fs-5 text-warning"></i>
+                            <span>My Shopping Cart</span>
+                        </div>
+                        <span class="badge bg-danger rounded-pill small" id="drawerCartBadge">0</span>
+                    </a>
+
                     <a href="{% url 'login' %}" class="list-group-item list-group-item-action bg-transparent text-white border-0 rounded-3 py-2 px-3 mb-1 d-flex align-items-center justify-content-between {% if request.resolver_match.url_name == 'login' %}active bg-primary text-white fw-bold shadow-sm{% endif %}">
                         <div class="d-flex align-items-center gap-3">
                             <i class="bi bi-box-arrow-in-right fs-5 text-primary {% if request.resolver_match.url_name == 'login' %}text-white{% endif %}"></i>

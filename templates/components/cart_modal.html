@@ -1,0 +1,540 @@
+<!-- Interactive Shopping Cart & Checkout Modal Component -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="modal-header bg-dark text-white border-0 py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="bg-warning text-dark rounded-3 p-1 px-2 d-inline-flex align-items-center justify-content-center shadow-sm">
+                        <i class="bi bi-cart3 fs-5"></i>
+                    </span>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="cartModalLabel">Shopping Cart & Order Checkout</h5>
+                        <small class="text-white-50" style="font-size: 0.75rem;">ACID Transactions & Automated Triggers</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-3 p-md-4">
+                
+                <!-- Error Alert Box -->
+                <div id="orderErrorAlert" class="alert alert-danger d-none align-items-center rounded-3 shadow-sm py-2 px-3 mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-5 me-2 flex-shrink-0"></i>
+                    <div id="orderErrorMsg" class="small fw-semibold"></div>
+                </div>
+
+                <!-- Success Confirmation Box (Replaces form on successful order) -->
+                <div id="orderSuccessBox" class="d-none text-center py-4">
+                    <div class="bg-success-subtle text-success rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3 shadow-sm" style="width: 70px; height: 70px;">
+                        <i class="bi bi-check-circle-fill display-5"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1" id="successOrderTitle">Order Placed Successfully!</h4>
+                    <p class="text-muted small mb-3" id="successOrderSubtitle">Your transaction has been verified and recorded in the database.</p>
+                    
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-4 mx-auto text-start" style="max-width: 420px;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Order Reference:</span>
+                            <span class="fw-bold font-monospace text-primary" id="successOrderId">#---</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Initial Amount:</span>
+                            <span class="text-dark" id="successOrderSubtotal">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Tax (5% VAT):</span>
+                            <span class="text-dark" id="successOrderTax">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Membership Discount:</span>
+                            <span class="text-success" id="successOrderDiscount">-$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2">
+                            <span class="fw-bold text-dark">Final Paid Total:</span>
+                            <span class="fw-bold text-success fs-5" id="successOrderTotal">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'user_dashboard' %}" class="btn btn-primary btn-sm px-3 fw-bold rounded-pill">
+                            <i class="bi bi-clock-history me-1"></i> View in My Orders
+                        </a>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3 rounded-pill" data-bs-dismiss="modal" onclick="resetOrderModal()">
+                            <i class="bi bi-bag-plus me-1"></i> Continue Shopping
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Cart & Checkout Form Content -->
+                <div id="cartContentSection">
+                    
+                    <!-- Empty Cart Message -->
+                    <div id="emptyCartView" class="text-center py-5 d-none">
+                        <i class="bi bi-cart-x display-3 text-muted opacity-50 mb-3 d-block"></i>
+                        <h5 class="fw-bold text-dark mb-1">Your Cart is Currently Empty</h5>
+                        <p class="text-muted small mb-3">Explore the catalog and add products to start your order.</p>
+                        <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">
+                            Browse Catalog
+                        </button>
+                    </div>
+
+                    <!-- Non-Empty Cart View -->
+                    <div id="activeCartView">
+                        <div class="row g-3">
+                            
+                            <!-- Left Column: Ordered Items List -->
+                            <div class="col-12 col-lg-7">
+                                <div class="card border rounded-3 p-3 bg-white h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-bag-fill text-primary me-2"></i> Items in Cart</h6>
+                                        <button type="button" class="btn btn-link text-danger text-decoration-none p-0 small fw-semibold" onclick="clearCart()">
+                                            <i class="bi bi-trash3 me-1"></i> Clear Cart
+                                        </button>
+                                    </div>
+                                    <div id="cartItemsList" class="overflow-y-auto" style="max-height: 250px;">
+                                        <!-- Dynamically generated items -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Order Pricing Summary & Checkout Details -->
+                            <div class="col-12 col-lg-5">
+                                <div class="card border-0 bg-light rounded-3 p-3 h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-receipt text-primary me-2"></i> Order Summary</h6>
+                                        
+                                        <div class="d-flex justify-content-between small text-muted mb-2">
+                                            <span>Items Subtotal:</span>
+                                            <span class="fw-bold text-dark" id="summarySubtotal">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted mb-2">
+                                            <span>Tax (5% VAT):</span>
+                                            <span class="text-dark" id="summaryTax">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted mb-2">
+                                            <span>Member Discount:</span>
+                                            <span class="text-success fw-semibold" id="summaryDiscount">-$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between border-top pt-2 mb-3">
+                                            <span class="fw-bold text-dark">Estimated Total:</span>
+                                            <span class="fw-bold text-primary fs-5" id="summaryGrandTotal">$0.00</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Customer Profile Info Badge -->
+                                    {% if user.is_authenticated %}
+                                    <div class="p-2 rounded bg-white border small mb-2">
+                                        <i class="bi bi-person-check-fill text-success me-1"></i>
+                                        Ordering as: <strong>{{ user.customer_profile.full_name|default:user.username }}</strong>
+                                        <span class="badge bg-primary ms-1">{{ user.customer_profile.membership_level|default:'Regular' }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Delivery and Payment Information Form -->
+                        <div class="card border rounded-3 p-3 mt-3 bg-white">
+                            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-truck text-primary me-2"></i> Shipping & Payment Information</h6>
+                            
+                            <div class="row g-2">
+                                {% if not user.is_authenticated %}
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label small text-muted fw-semibold mb-1">Your Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" id="orderGuestName" class="form-control form-control-sm" placeholder="e.g. John Doe" required>
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label small text-muted fw-semibold mb-1">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" id="orderGuestEmail" class="form-control form-control-sm" placeholder="name@example.com" required>
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label small text-muted fw-semibold mb-1">Phone Number <span class="text-danger">*</span></label>
+                                    <input type="text" id="orderGuestPhone" class="form-control form-control-sm" placeholder="+8801..." required>
+                                </div>
+                                {% endif %}
+
+                                <div class="col-12 col-sm-7">
+                                    <label class="form-label small text-muted fw-semibold mb-1">Shipping Destination Address <span class="text-danger">*</span></label>
+                                    <input type="text" id="orderShippingAddress" class="form-control form-control-sm" 
+                                           value="{{ user.customer_profile.address|default:'' }}" 
+                                           placeholder="House/Street, Area, City..." required>
+                                </div>
+
+                                <div class="col-12 col-sm-5">
+                                    <label class="form-label small text-muted fw-semibold mb-1">Payment Method</label>
+                                    <select id="orderPaymentMethod" class="form-select form-select-sm">
+                                        <option value="Cash on Delivery" selected>💵 Cash on Delivery (COD)</option>
+                                        <option value="Bkash">📱 bKash Mobile Banking</option>
+                                        <option value="Nagad">📱 Nagad Mobile Banking</option>
+                                        <option value="Credit Card">💳 Credit Card (Online)</option>
+                                        <option value="Debit Card">💳 Debit Card</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer bg-light border-0 py-2 px-4 d-flex justify-content-between" id="cartModalFooter">
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">
+                    Close
+                </button>
+                
+                <button type="button" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2" id="btnPlaceOrder" onclick="submitCartOrder()">
+                    <span id="btnOrderSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <i class="bi bi-check-circle-fill" id="btnOrderIcon"></i>
+                    <span id="btnOrderText">Confirm & Place Order</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container for Notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="actionToast" class="toast align-items-center text-bg-dark border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                <span id="toastMessage">Product added to order cart!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Global Cart JavaScript Engine -->
+<script>
+    const USER_MEMBERSHIP = "{{ user.customer_profile.membership_level|default:'Regular' }}".toLowerCase();
+    const IS_AUTHENTICATED = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
+    // Initialize cart from localStorage
+    function getStoredCart() {
+        try {
+            const data = localStorage.getItem('ecom_db_cart');
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveStoredCart(cart) {
+        try {
+            localStorage.setItem('ecom_db_cart', JSON.stringify(cart));
+        } catch (e) {}
+    }
+
+    let cart = getStoredCart();
+
+    // Helper: Get CSRF Token
+    function getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Add Product to Cart
+    function addToCart(productId, productName, productPrice, imageUrl) {
+        productId = parseInt(productId);
+        productPrice = parseFloat(productPrice);
+        
+        const existing = cart.find(item => item.id === productId);
+        if (existing) {
+            existing.quantity = (existing.quantity || 1) + 1;
+        } else {
+            cart.push({
+                id: productId,
+                name: productName,
+                price: productPrice,
+                image: imageUrl || '',
+                quantity: 1
+            });
+        }
+        
+        saveStoredCart(cart);
+        updateCartUI();
+        showToast(`'${productName}' added to cart!`);
+    }
+
+    // Quick Buy Now
+    function quickBuyNow(productId, productName, productPrice, imageUrl) {
+        addToCart(productId, productName, productPrice, imageUrl);
+        
+        // Hide detail modal if open
+        const detailModalEl = document.getElementById(`productDetailModal${productId}`);
+        if (detailModalEl) {
+            const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+            if (detailModal) detailModal.hide();
+        }
+
+        // Open Cart Modal
+        const cartModalEl = document.getElementById('cartModal');
+        if (cartModalEl) {
+            const cartModal = bootstrap.Modal.getOrCreateInstance(cartModalEl);
+            cartModal.show();
+        }
+    }
+
+    // Update Item Quantity
+    function updateCartQuantity(productId, delta) {
+        productId = parseInt(productId);
+        const itemIndex = cart.findIndex(it => it.id === productId);
+        if (itemIndex > -1) {
+            cart[itemIndex].quantity = (cart[itemIndex].quantity || 1) + delta;
+            if (cart[itemIndex].quantity <= 0) {
+                cart.splice(itemIndex, 1);
+            }
+            saveStoredCart(cart);
+            updateCartUI();
+        }
+    }
+
+    // Remove Item
+    function removeFromCart(productId) {
+        productId = parseInt(productId);
+        cart = cart.filter(it => it.id !== productId);
+        saveStoredCart(cart);
+        updateCartUI();
+    }
+
+    // Clear entire cart
+    function clearCart() {
+        cart = [];
+        saveStoredCart(cart);
+        updateCartUI();
+    }
+
+    // Show Toast
+    function showToast(msg) {
+        const toastEl = document.getElementById('actionToast');
+        if (toastEl) {
+            document.getElementById('toastMessage').innerText = msg;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    }
+
+    // Calculate Discount Rate
+    function getDiscountRate() {
+        if (USER_MEMBERSHIP === 'platinum') return 0.15;
+        if (USER_MEMBERSHIP === 'gold') return 0.10;
+        if (USER_MEMBERSHIP === 'silver') return 0.05;
+        return 0.00;
+    }
+
+    // Update UI Elements across Navbar & Modal
+    function updateCartUI() {
+        const totalItems = cart.reduce((acc, it) => acc + (it.quantity || 1), 0);
+        
+        // Update Navbar Badges
+        const navBadge = document.getElementById('cartCountBadge');
+        if (navBadge) navBadge.innerText = totalItems;
+        const drawerBadge = document.getElementById('drawerCartBadge');
+        if (drawerBadge) drawerBadge.innerText = totalItems;
+
+        // Render Cart Modal View
+        const emptyView = document.getElementById('emptyCartView');
+        const activeView = document.getElementById('activeCartView');
+        const cartFooter = document.getElementById('cartModalFooter');
+        const cartList = document.getElementById('cartItemsList');
+
+        if (!activeView) return;
+
+        if (cart.length === 0) {
+            if (emptyView) emptyView.classList.remove('d-none');
+            activeView.classList.add('d-none');
+            if (cartFooter) cartFooter.classList.add('d-none');
+            return;
+        }
+
+        if (emptyView) emptyView.classList.add('d-none');
+        activeView.classList.remove('d-none');
+        if (cartFooter) cartFooter.classList.remove('d-none');
+
+        // Render Items List
+        let subtotal = 0;
+        let html = '<div class="list-group list-group-flush">';
+        cart.forEach(item => {
+            const qty = item.quantity || 1;
+            const itemTotal = item.price * qty;
+            subtotal += itemTotal;
+            
+            html += `
+                <div class="list-group-item px-0 py-2 d-flex align-items-center justify-content-between cart-item-row">
+                    <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                        ${item.image ? `<img src="${item.image}" alt="${item.name}" class="rounded border" style="width: 38px; height: 38px; object-fit: contain;">` : ''}
+                        <div class="text-truncate">
+                            <strong class="d-block text-dark small text-truncate" style="max-width: 170px;">${item.name}</strong>
+                            <small class="text-muted font-monospace" style="font-size: 0.75rem;">ID: ${item.id} &bull; $${item.price.toFixed(2)}</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="width: 85px;">
+                            <button class="btn btn-outline-secondary px-2 py-0" type="button" onclick="updateCartQuantity(${item.id}, -1)">-</button>
+                            <span class="input-group-text bg-white px-2 py-0 small fw-bold">${qty}</span>
+                            <button class="btn btn-outline-secondary px-2 py-0" type="button" onclick="updateCartQuantity(${item.id}, 1)">+</button>
+                        </div>
+                        <span class="fw-bold text-primary small text-end" style="min-width: 55px;">$${itemTotal.toFixed(2)}</span>
+                        <button type="button" class="btn btn-link text-danger p-0 ms-1" onclick="removeFromCart(${item.id})" title="Remove item">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        cartList.innerHTML = html;
+
+        // Pricing Summary Calculations
+        const discountRate = getDiscountRate();
+        const tax = Math.round(subtotal * 0.05 * 100) / 100;
+        const discount = Math.round(subtotal * discountRate * 100) / 100;
+        const grandTotal = subtotal + tax - discount;
+
+        document.getElementById('summarySubtotal').innerText = `$${subtotal.toFixed(2)}`;
+        document.getElementById('summaryTax').innerText = `$${tax.toFixed(2)}`;
+        document.getElementById('summaryDiscount').innerText = `-$${discount.toFixed(2)}`;
+        document.getElementById('summaryGrandTotal').innerText = `$${grandTotal.toFixed(2)}`;
+    }
+
+    // Submit Cart Order via AJAX POST
+    async function submitCartOrder() {
+        const errorAlert = document.getElementById('orderErrorAlert');
+        const errorMsg = document.getElementById('orderErrorMsg');
+        errorAlert.classList.add('d-none');
+
+        if (cart.length === 0) {
+            errorMsg.innerText = 'Your shopping cart is empty.';
+            errorAlert.classList.remove('d-none');
+            return;
+        }
+
+        // Gather Shipping & Guest details
+        const shippingAddressInput = document.getElementById('orderShippingAddress');
+        const shippingAddress = shippingAddressInput ? shippingAddressInput.value.trim() : '';
+        const paymentMethod = document.getElementById('orderPaymentMethod').value;
+
+        if (!shippingAddress) {
+            errorMsg.innerText = 'Please enter a valid shipping address.';
+            errorAlert.classList.remove('d-none');
+            if (shippingAddressInput) shippingAddressInput.focus();
+            return;
+        }
+
+        let guestName = '', guestEmail = '', guestPhone = '';
+        if (!IS_AUTHENTICATED) {
+            const nameEl = document.getElementById('orderGuestName');
+            const emailEl = document.getElementById('orderGuestEmail');
+            const phoneEl = document.getElementById('orderGuestPhone');
+
+            guestName = nameEl ? nameEl.value.trim() : '';
+            guestEmail = emailEl ? emailEl.value.trim() : '';
+            guestPhone = phoneEl ? phoneEl.value.trim() : '';
+
+            if (!guestName || !guestEmail) {
+                errorMsg.innerText = 'Please provide your Full Name and Email Address to complete the order.';
+                errorAlert.classList.remove('d-none');
+                return;
+            }
+        }
+
+        // Prepare payload
+        const payload = {
+            items: cart.map(it => ({ product_id: it.id, quantity: it.quantity || 1 })),
+            shipping_address: shippingAddress,
+            payment_method: paymentMethod,
+            full_name: guestName,
+            email: guestEmail,
+            phone: guestPhone
+        };
+
+        // Loading button state
+        const btnPlace = document.getElementById('btnPlaceOrder');
+        const spinner = document.getElementById('btnOrderSpinner');
+        const icon = document.getElementById('btnOrderIcon');
+        const text = document.getElementById('btnOrderText');
+
+        btnPlace.disabled = true;
+        spinner.classList.remove('d-none');
+        icon.classList.add('d-none');
+        text.innerText = 'Processing Order...';
+
+        try {
+            const response = await fetch('/orders/place/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Clear cart
+                clearCart();
+
+                // Show Success View in Modal
+                document.getElementById('cartContentSection').classList.add('d-none');
+                document.getElementById('cartModalFooter').classList.add('d-none');
+                
+                document.getElementById('successOrderId').innerText = `#${data.order_id}`;
+                document.getElementById('successOrderSubtotal').innerText = `$${(data.total_amount || 0).toFixed(2)}`;
+                document.getElementById('successOrderTax').innerText = `$${(data.tax || 0).toFixed(2)}`;
+                document.getElementById('successOrderDiscount').innerText = `-$${(data.discount || 0).toFixed(2)}`;
+                document.getElementById('successOrderTotal').innerText = `$${(data.final_amount || 0).toFixed(2)}`;
+                
+                document.getElementById('orderSuccessBox').classList.remove('d-none');
+                showToast(`✔ Order #${data.order_id} placed successfully!`);
+            } else {
+                errorMsg.innerText = data.message || 'Failed to place order. Please try again.';
+                errorAlert.classList.remove('d-none');
+            }
+        } catch (err) {
+            errorMsg.innerText = `Network or Server Exception: ${err.message}`;
+            errorAlert.classList.remove('d-none');
+        } finally {
+            btnPlace.disabled = false;
+            spinner.classList.add('d-none');
+            icon.classList.remove('d-none');
+            text.innerText = 'Confirm & Place Order';
+        }
+    }
+
+    function resetOrderModal() {
+        const successBox = document.getElementById('orderSuccessBox');
+        const cartContent = document.getElementById('cartContentSection');
+        const cartFooter = document.getElementById('cartModalFooter');
+        
+        if (successBox) successBox.classList.add('d-none');
+        if (cartContent) cartContent.classList.remove('d-none');
+        if (cartFooter) cartFooter.classList.remove('d-none');
+        updateCartUI();
+    }
+
+    // Auto-initialize Cart UI on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartUI();
+    });
+</script>

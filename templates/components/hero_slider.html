@@ -7,32 +7,32 @@
     
     <div class="carousel-inner">
         {% for slide in slides %}
-        <div class="carousel-item {% if forloop.first %}active{% endif %} bg-dark text-white position-relative" style="background: {{ slide.background_gradient|default:'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}; min-height: 320px;">
-            <div class="container h-100 d-flex flex-column justify-content-center p-4 p-md-5">
-                <div class="row align-items-center g-4">
-                    <div class="{% if slide.get_image_url %}col-lg-7 col-md-7{% else %}col-12{% endif %} d-flex flex-column justify-content-center">
+        <div class="carousel-item {% if forloop.first %}active{% endif %} bg-dark text-white position-relative" style="background: {{ slide.background_gradient|default:'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }};">
+            <div class="container h-100 d-flex flex-column justify-content-center p-3 p-sm-4 p-md-5">
+                <div class="row align-items-center g-3 g-md-4">
+                    <div class="{% if slide.get_image_url %}col-12 col-md-7{% else %}col-12{% endif %} d-flex flex-column justify-content-center">
                         {% if slide.badge_text %}
-                        <span class="badge bg-{{ slide.badge_color|default:'primary' }} text-uppercase px-3 py-2 rounded-pill w-auto align-self-start mb-2 shadow-sm">
+                        <span class="badge bg-{{ slide.badge_color|default:'primary' }} text-uppercase hero-slide-badge rounded-pill w-auto align-self-start mb-2 shadow-sm">
                             {{ slide.badge_text }}
                         </span>
                         {% endif %}
                         
-                        <h1 class="display-5 fw-bold text-white mb-2">{{ slide.title }}</h1>
+                        <h2 class="hero-slide-title fw-bold text-white mb-2 fs-3 fs-md-2 fs-lg-1">{{ slide.title }}</h2>
                         
                         {% if slide.subtitle %}
-                        <p class="lead text-light mb-4 opacity-90 col-xl-10">
+                        <p class="hero-slide-subtitle text-light mb-3 opacity-90 col-xl-10 small fs-md-6">
                             {{ slide.subtitle }}
                         </p>
                         {% endif %}
                         
-                        <div class="d-flex flex-wrap gap-2">
+                        <div class="d-flex flex-wrap gap-2 mt-1">
                             {% if slide.button_text %}
-                            <a href="{{ slide.button_url }}" class="btn btn-primary btn-lg px-4 rounded-3 shadow-sm fw-bold">
+                            <a href="{{ slide.button_url }}" class="btn btn-primary hero-slide-btn rounded-3 shadow-sm fw-bold px-3 py-2">
                                 {{ slide.button_text }}
                             </a>
                             {% endif %}
                             {% if slide.secondary_button_text %}
-                            <a href="{{ slide.secondary_button_url }}" class="btn btn-outline-light btn-lg px-4 rounded-3">
+                            <a href="{{ slide.secondary_button_url }}" class="btn btn-outline-light hero-slide-btn rounded-3 px-3 py-2">
                                 {{ slide.secondary_button_text }}
                             </a>
                             {% endif %}
@@ -40,15 +40,15 @@
                     </div>
 
                     {% if slide.get_image_url %}
-                    <div class="col-lg-5 col-md-5 text-center text-md-end">
+                    <div class="col-12 col-md-5 text-center text-md-end d-none d-sm-block">
                         <div class="position-relative d-inline-block">
                             <img src="{{ slide.get_image_url }}" alt="{{ slide.title }}" 
-                                 class="img-fluid rounded-4 shadow-lg border border-white border-opacity-25 bg-white bg-opacity-10 p-2" 
-                                 style="max-height: 270px; width: auto; object-fit: cover;">
+                                 class="img-fluid rounded-4 shadow-lg border border-white border-opacity-25 bg-white bg-opacity-10 p-2 hero-slide-img" 
+                                 style="max-height: 200px; width: auto; object-fit: contain;">
                             {% if slide.product %}
-                            <div class="position-absolute bottom-0 end-0 bg-dark bg-opacity-85 text-white p-2 px-3 rounded-3 m-2 shadow border border-secondary" style="backdrop-filter: blur(4px);">
-                                <small class="d-block text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Item #{{ slide.product.product_id }}</small>
-                                <span class="fw-bold text-warning fs-6">${{ slide.product.price }}</span>
+                            <div class="position-absolute bottom-0 end-0 bg-dark bg-opacity-85 text-white p-1 px-2 rounded-3 m-1 shadow border border-secondary" style="backdrop-filter: blur(4px);">
+                                <small class="d-block text-white-50 text-uppercase fw-bold" style="font-size: 0.6rem;">Item #{{ slide.product.product_id }}</small>
+                                <span class="fw-bold text-warning small">${{ slide.product.price }}</span>
                             </div>
                             {% endif %}
                         </div>
