@@ -1,17 +1,21 @@
+providers = ["python"]
+
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip", "python311Packages.setuptools", "python311Packages.wheel", "postgresql"]
+nixPkgs = ["postgresql"]
 
 [phases.install]
+paths = ["/opt/venv/bin"]
 cmds = [
-  "python3 -m pip install --upgrade pip",
-  "python3 -m pip install --no-cache-dir -r requirements.txt"
+  "python -m venv --copies /opt/venv",
+  ". /opt/venv/bin/activate && pip install --upgrade pip",
+  ". /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.build]
+paths = ["/opt/venv/bin"]
 cmds = [
-  "python3 manage.py collectstatic --noinput",
-  "python3 manage.py migrate --noinput"
+  ". /opt/venv/bin/activate && python manage.py collectstatic --noinput"
 ]
 
 [start]
-cmd = "python3 server.py"
+cmd = ". /opt/venv/bin/activate && python server.py"
