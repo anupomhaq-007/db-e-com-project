@@ -28,18 +28,25 @@ def test_neon_connection():
         print("✔ Database connection successfully established!")
         
         with connection.cursor() as cursor:
-            cursor.execute("SELECT version();")
-            version = cursor.fetchone()[0]
-            print(f"✔ Engine Version: {version}")
-            
-            cursor.execute("SELECT current_database(), current_user;")
-            db_name, db_user = cursor.fetchone()
-            print(f"✔ Connected DB: '{db_name}' as User: '{db_user}'")
+            is_postgres = 'postgresql' in connection.vendor
+            if is_postgres:
+                cursor.execute("SELECT version();")
+                version = cursor.fetchone()[0]
+                print(f"✔ Engine Version: {version}")
+                
+                cursor.execute("SELECT current_database(), current_user;")
+                db_name, db_user = cursor.fetchone()
+                print(f"✔ Connected DB: '{db_name}' as User: '{db_user}'")
+            else:
+                cursor.execute("SELECT sqlite_version();")
+                version = cursor.fetchone()[0]
+                print(f"✔ SQLite Engine Version: {version}")
+                print(f"✔ Active Database Engine: {connection.vendor}")
             
             # Check migrations table
             cursor.execute("SELECT COUNT(*) FROM django_migrations;")
             migration_count = cursor.fetchone()[0]
-            print(f"✔ Migrations applied in Neon DB: {migration_count}")
+            print(f"✔ Migrations applied in DB: {migration_count}")
             
         print("==================================================")
         print("RESULT: Neon PostgreSQL Database Connection Passed 100%!")

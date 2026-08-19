@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import connection
 from django.db.models import Q, Max, Sum, Count
@@ -496,7 +498,7 @@ ORDER BY o.order_date DESC;"""
         'id': 'e',
         'title': '(e) Above-Average Price Products',
         'description': 'Retrieve products with unit price strictly higher than the overall average product price subquery.',
-        'sql': """SELECT product_id, name, brand, price, (SELECT ROUND(AVG(price)::numeric, 2) FROM store_product) AS catalog_avg_price
+        'sql': """SELECT product_id, name, brand, price, (SELECT ROUND(AVG(price), 2) FROM store_product) AS catalog_avg_price
 FROM store_product
 WHERE price > (SELECT AVG(price) FROM store_product)
 ORDER BY price DESC;"""
@@ -515,7 +517,7 @@ ORDER BY total_products DESC;"""
         'id': 'g',
         'title': '(g) High-Value Product Categories',
         'description': 'Identify categories where average product price exceeds $500 (HAVING clause filtering).',
-        'sql': """SELECT c.category_id, c.name AS category_name, ROUND(AVG(p.price)::numeric, 2) AS average_price, COUNT(p.product_id) AS item_count
+        'sql': """SELECT c.category_id, c.name AS category_name, ROUND(AVG(p.price), 2) AS average_price, COUNT(p.product_id) AS item_count
 FROM store_category c
 JOIN store_product p ON c.category_id = p.category_id
 GROUP BY c.category_id, c.name
@@ -813,6 +815,12 @@ def admin_dashboard_view(request):
     total_suppliers = Supplier.objects.count()
     recent_audit_logs = OrderLog.objects.all().order_by('-log_id')[:10]
 
+    # Database & System Configuration Overview
+    db_engine = settings.DATABASES['default'].get('ENGINE', '')
+    db_host = settings.DATABASES['default'].get('HOST', 'Local SQLite' if 'sqlite' in db_engine else 'Remote')
+    db_name = settings.DATABASES['default'].get('NAME', '')
+    has_cloudinary = bool(os.environ.get('CLOUDINARY_URL', '').strip())
+
     context = {
         'orders': orders[:30],
         'status_filter': status_filter,
@@ -830,8 +838,36 @@ def admin_dashboard_view(request):
         'total_warehouses': total_warehouses,
         'total_suppliers': total_suppliers,
         'recent_audit_logs': recent_audit_logs,
+        'db_engine': 'PostgreSQL (Neon / Railway)' if 'postgresql' in db_engine else 'SQLite',
+        'db_host': db_host,
+        'has_cloudinary': has_cloudinary,
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
+
+
+@csrf_exempt
+def admin_reseed_data_view(request):
+    """
+    Admin Action: Seeds or resets the 13 faculty dataset products, categories, suppliers,
+    warehouses, sample orders, and accounts into the currently connected database.
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Access Denied: Admin authorization required to seed database.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        try:
+            from django.core.management import call_command
+            call_command('seed_data')
+            messages.success(
+                request,
+                "✔ Demo dataset successfully seeded into the connected database! 13 Faculty products (IDs 101–113), categories, suppliers, warehouses, and demo accounts are ready."
+            )
+        except Exception as e:
+            messages.error(request, f"❌ Failed to seed database: {str(e)}")
+
+    return redirect('admin_dashboard')
+
 
 
 @csrf_exempt

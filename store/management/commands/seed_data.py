@@ -163,4 +163,4 @@ class Command(BaseCommand):
         OrderDetail.objects.get_or_create(order=o3, product=p108, defaults={"quantity": 1, "unit_price": p108.price, "subtotal": p108.price})
         Payment.objects.get_or_create(order=o3, defaults={"amount": o3.total_amount, "tax": 92.50, "discount": 0.00, "payment_method": "Cash on Delivery", "payment_status": "Pending"})
 
-        self.stdout.write(self.style.SUCCESS("✔ Successfully seeded initial database dataset into Neon PostgreSQL!"))
+        self.stdout.write(self.style.SUCCESS("[OK] Successfully seeded initial database dataset into SQLite/PostgreSQL!"))

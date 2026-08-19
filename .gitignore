@@ -5,4 +5,12 @@ coverage/
 .DS_Store
 *.log
 .env*
-.env.example
+!.env.example
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.corrupted
+media/products/prod_*_test_*.png

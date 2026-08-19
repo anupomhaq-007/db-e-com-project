@@ -9,6 +9,7 @@ urlpatterns = [
     
     # Dashboards & Management (Phase 8 Extensions)
     path('dashboard/admin/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('dashboard/admin/reseed/', views.admin_reseed_data_view, name='admin_reseed_data'),
     path('dashboard/admin/slides/', views.admin_slider_list_view, name='admin_slider_list'),
     path('dashboard/admin/slides/add/', views.admin_slider_create_view, name='admin_slider_create'),
     path('dashboard/admin/slides/<int:pk>/edit/', views.admin_slider_update_view, name='admin_slider_update'),
