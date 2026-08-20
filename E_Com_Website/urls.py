@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from store import views as store_views
 
 urlpatterns = [
+    path('health/', store_views.health_check, name='health_check_root'),
     path('admin/login/', store_views.admin_login_custom_view, name='admin_login_custom'),
     path('admin/', admin.site.urls),
     path('', include('store.urls')),

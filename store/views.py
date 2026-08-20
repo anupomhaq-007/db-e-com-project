@@ -13,45 +13,57 @@ from django.views.decorators.csrf import csrf_exempt
 from store.models import Category, Supplier, Product, Customer, Warehouse, WarehouseStock, Order, OrderDetail, Payment, OrderLog, HeaderSlide
 from store.cloudinary_utils import upload_product_image_to_cloudinary, upload_slide_image_to_cloudinary
 
+def health_check(request):
+    """
+    Lightweight healthcheck endpoint for Railway / Cloud Run deployment probes.
+    Returns HTTP 200 OK immediately without heavy database or template overhead.
+    """
+    return JsonResponse({"status": "ok", "health": "healthy"}, status=200)
+
+
 def ensure_default_slides_exist():
     """
     Seeds initial default header slides into database if none exist yet.
     """
-    if HeaderSlide.objects.count() == 0:
-        p101 = Product.objects.filter(product_id=101).first()
-        HeaderSlide.objects.create(
-            title="E-Commerce Database System",
-            subtitle="Full-Stack Relational E-Commerce Architecture running on Neon PostgreSQL and Django 5.2.",
-            badge_text="CSE 303 Lab Project",
-            badge_color="primary",
-            button_text="Run SQL Queries",
-            button_url="#queries-section",
-            secondary_button_text="Lab Report",
-            secondary_button_url="#report-section",
-            background_gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-            display_order=1
-        )
-        HeaderSlide.objects.create(
-            title="13 Mandatory Faculty Products",
-            subtitle="Real-time stock monitoring, category filtering, and warehouse logistics mapping for Product IDs 101 through 113.",
-            badge_text="Inventory Management",
-            badge_color="warning",
-            button_text="Explore Products",
-            button_url="#catalog-section",
-            product=p101,
-            background_gradient="linear-gradient(135deg, #065f46 0%, #047857 100%)",
-            display_order=2
-        )
-        HeaderSlide.objects.create(
-            title="Automated Triggers & RAID-4 Engine",
-            subtitle="Live database triggers for stock integrity, payment calculations, audit logging, and XOR parity RAID recovery.",
-            badge_text="Advanced Features",
-            badge_color="info",
-            button_text="Test Triggers",
-            button_url="#triggers-section",
-            background_gradient="linear-gradient(135deg, #431407 0%, #7c2d12 100%)",
-            display_order=3
-        )
+    try:
+        if HeaderSlide.objects.count() == 0:
+            p101 = Product.objects.filter(product_id=101).first()
+            HeaderSlide.objects.create(
+                title="E-Commerce Database System",
+                subtitle="Full-Stack Relational E-Commerce Architecture running on Neon PostgreSQL and Django 5.2.",
+                badge_text="CSE 303 Lab Project",
+                badge_color="primary",
+                button_text="Run SQL Queries",
+                button_url="#queries-section",
+                secondary_button_text="Lab Report",
+                secondary_button_url="#report-section",
+                background_gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+                display_order=1
+            )
+            HeaderSlide.objects.create(
+                title="13 Mandatory Faculty Products",
+                subtitle="Real-time stock monitoring, category filtering, and warehouse logistics mapping for Product IDs 101 through 113.",
+                badge_text="Inventory Management",
+                badge_color="warning",
+                button_text="Explore Products",
+                button_url="#catalog-section",
+                product=p101,
+                background_gradient="linear-gradient(135deg, #065f46 0%, #047857 100%)",
+                display_order=2
+            )
+            HeaderSlide.objects.create(
+                title="Automated Triggers & RAID-4 Engine",
+                subtitle="Live database triggers for stock integrity, payment calculations, audit logging, and XOR parity RAID recovery.",
+                badge_text="Advanced Features",
+                badge_color="info",
+                button_text="Test Triggers",
+                button_url="#triggers-section",
+                background_gradient="linear-gradient(135deg, #431407 0%, #7c2d12 100%)",
+                display_order=3
+            )
+    except Exception as e:
+        print(f"[Slide Seeder Notice]: {e}", flush=True)
+
 
 
 def home(request):
