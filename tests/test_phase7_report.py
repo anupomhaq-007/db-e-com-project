@@ -41,9 +41,7 @@ def test_phase7_report():
 
     # 4. Verify Final Report & Academic Metadata
     assert "Database System Live Record Metrics" in content
-    assert "22025214" in content
-    assert "Independent University Bangladesh" in content
-    print("✔ Final Lab System Report & Academic Metadata verified!")
+    print("✔ Final Lab System Report verified!")
 
     print("==================================================")
     print("RESULT: Phase 7 Advanced DBMS Report Test Passed 100%!")

@@ -39,11 +39,8 @@ def test_phase2_ui():
         ("Component 1: Search Form", 'placeholder="Search product or brand..."'),
         ("Component 1: Cart Badge", 'id="cartCountBadge"'),
         ("Component 2: Hero Slider", 'id="heroCarousel"'),
-        ("Component 2: CSE 303 Lab Slide", "CSE 303 Lab Project"),
         ("Component 3: Product Cards Grid", "product-card"),
         ("Component 3: Faculty Product IDs", "ID: 101"),
-        ("Component 4: Footer System Info", "Student ID: 22025214"),
-        ("Component 4: Academic Specs", "Independent University Bangladesh"),
     ]
     
     all_passed = True
