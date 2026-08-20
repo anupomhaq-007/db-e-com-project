@@ -71,57 +71,63 @@ def home(request):
     Main E-Commerce Catalog & Portal Home View
     Supports category filtering, sorting, stock filtering, search, and dynamic header slides
     """
-    ensure_default_slides_exist()
-    slides = HeaderSlide.objects.filter(is_active=True).order_by('display_order', '-created_at')
-
-    categories = Category.objects.all().order_by('name')
     selected_category = request.GET.get('category', '').strip()
     sort_by = request.GET.get('sort', 'id').strip()
     stock_status = request.GET.get('stock', '').strip()
     search_query = request.GET.get('q', '').strip()
     
-    products = Product.objects.select_related('category', 'supplier').all()
-    
+    slides = []
+    categories = []
+    products = Product.objects.none()
     active_category_name = None
-    if selected_category:
-        products = products.filter(category_id=selected_category)
-        cat_obj = categories.filter(category_id=selected_category).first()
-        if cat_obj:
-            active_category_name = cat_obj.name
 
-    if stock_status == 'in_stock':
-        products = products.filter(stock_quantity__gt=0)
-    elif stock_status == 'low_stock':
-        products = products.filter(stock_quantity__gt=0, stock_quantity__lte=10)
-    elif stock_status == 'out_of_stock':
-        products = products.filter(stock_quantity=0)
+    try:
+        ensure_default_slides_exist()
+        slides = HeaderSlide.objects.filter(is_active=True).order_by('display_order', '-created_at')
+        categories = Category.objects.all().order_by('name')
+        products = Product.objects.select_related('category', 'supplier').all()
         
-    if search_query:
-        if search_query.isdigit():
-            products = products.filter(
-                Q(product_id=int(search_query)) |
-                Q(name__icontains=search_query) |
-                Q(brand__icontains=search_query)
-            )
-        else:
-            products = products.filter(
-                Q(name__icontains=search_query) |
-                Q(brand__icontains=search_query) |
-                Q(description__icontains=search_query) |
-                Q(category__name__icontains=search_query)
-            )
+        if selected_category:
+            products = products.filter(category_id=selected_category)
+            cat_obj = categories.filter(category_id=selected_category).first()
+            if cat_obj:
+                active_category_name = cat_obj.name
 
-    # Sorting options
-    if sort_by == 'price_asc':
-        products = products.order_by('price')
-    elif sort_by == 'price_desc':
-        products = products.order_by('-price')
-    elif sort_by == 'name':
-        products = products.order_by('name')
-    elif sort_by == 'stock':
-        products = products.order_by('-stock_quantity')
-    else:
-        products = products.order_by('product_id')
+        if stock_status == 'in_stock':
+            products = products.filter(stock_quantity__gt=0)
+        elif stock_status == 'low_stock':
+            products = products.filter(stock_quantity__gt=0, stock_quantity__lte=10)
+        elif stock_status == 'out_of_stock':
+            products = products.filter(stock_quantity=0)
+            
+        if search_query:
+            if search_query.isdigit():
+                products = products.filter(
+                    Q(product_id=int(search_query)) |
+                    Q(name__icontains=search_query) |
+                    Q(brand__icontains=search_query)
+                )
+            else:
+                products = products.filter(
+                    Q(name__icontains=search_query) |
+                    Q(brand__icontains=search_query) |
+                    Q(description__icontains=search_query) |
+                    Q(category__name__icontains=search_query)
+                )
+
+        # Sorting options
+        if sort_by == 'price_asc':
+            products = products.order_by('price')
+        elif sort_by == 'price_desc':
+            products = products.order_by('-price')
+        elif sort_by == 'name':
+            products = products.order_by('name')
+        elif sort_by == 'stock':
+            products = products.order_by('-stock_quantity')
+        else:
+            products = products.order_by('product_id')
+    except Exception as e:
+        print(f"[Home View Database Warning]: {e}", flush=True)
         
     context = {
         'products': products,

@@ -8,6 +8,16 @@ if path not in sys.path:
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'E_Com_Website.settings')
 
+import django
+django.setup()
+
+# Auto-apply database migrations on cold boot to ensure Neon PostgreSQL schema is synced
+try:
+    from django.core.management import call_command
+    call_command('migrate', interactive=False)
+except Exception as e:
+    print(f"[Vercel Migration Notice]: {e}", flush=True)
+
 from django.core.wsgi import get_wsgi_application
 
 _application = get_wsgi_application()
