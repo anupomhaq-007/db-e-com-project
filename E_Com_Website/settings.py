@@ -29,13 +29,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
     'https://*.run.app',
     'https://*.asia-southeast1.run.app',
     'https://*.railway.app',
     'https://*.up.railway.app',
     'https://*.cloudtype.app',
     'https://*.googleusercontent.com',
-    'https://*.ai.studio',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost',
@@ -154,6 +154,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media Files (Local Fallback & Uploads)
 MEDIA_URL = '/media/'
