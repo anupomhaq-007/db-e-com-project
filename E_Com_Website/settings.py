@@ -103,11 +103,23 @@ WSGI_APPLICATION = 'E_Com_Website.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-db_url = os.environ.get('DATABASE_URL')
-if db_url:
-    DATABASES = {
-        'default': dj_database_url.parse(db_url, conn_max_age=600)
-    }
+db_url = (os.environ.get('DATABASE_URL') or '').strip()
+if db_url and db_url.startswith(('postgres://', 'postgresql://', 'sqlite://', 'mysql://')):
+    try:
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        DATABASES = {
+            'default': dj_database_url.parse(db_url, conn_max_age=600)
+        }
+    except Exception as e:
+        print(f"Warning: Failed to parse DATABASE_URL ({e}). Falling back to SQLite.", flush=True)
+        sqlite_path = '/tmp/db.sqlite3' if 'VERCEL' in os.environ else BASE_DIR / 'db.sqlite3'
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': sqlite_path,
+            }
+        }
 else:
     # Use /tmp for Vercel serverless read-only environment fallback
     sqlite_path = '/tmp/db.sqlite3' if 'VERCEL' in os.environ else BASE_DIR / 'db.sqlite3'
